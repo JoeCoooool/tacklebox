@@ -78,14 +78,6 @@ header("X-Frame-Options: DENY");
 
 if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
-function is_safe_url($url) {
-    $p = parse_url($url);
-    if (!$p || !in_array($p['scheme'], ['http', 'https'])) return false;
-    $ip = gethostbyname($p['host'] ?? '');
-    if (!$ip || filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) return false;
-    return $url;
-}
-
 $lang = $_SESSION['lang'] ?? 'de';
 if (isset($_GET['lang'])) { $lang = $_GET['lang'] == 'en' ? 'en' : 'de'; $_SESSION['lang'] = $lang; }
 $theme = $_SESSION['theme'] ?? 'dark';
@@ -202,15 +194,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['action']) || isset($
                 if(!is_dir('uploads')) mkdir('uploads', 0755, true); 
                 move_uploaded_file($_FILES['bild']['tmp_name'], "uploads/".$bild);
             }
-        } elseif (!empty($_POST['remote_img']) && is_safe_url($_POST['remote_img'])) {
-            $ctx = stream_context_create(['http' => ['timeout' => 5]]);
-            $data = @file_get_contents($_POST['remote_img'], false, $ctx);
-            if($data && strlen($data) < 2000000) { 
-                if (!empty($_POST['current_bild'])) { $oldFile = "uploads/" . $_POST['current_bild']; if (file_exists($oldFile)) unlink($oldFile); }
-                $bild = bin2hex(random_bytes(16)).'.jpg'; 
-                if(!is_dir('uploads')) mkdir('uploads', 0755, true);
-                file_put_contents("uploads/".$bild, $data); 
-            }
         }
         $fische = isset($_POST['zielfische']) ? implode(', ', $_POST['zielfische']) : '';
         $v = [$_POST['name'], $_POST['hersteller'], $_POST['kategorie'], $_POST['farbe'], (float)$_POST['gewicht'], (float)$_POST['laenge'], (float)$_POST['preis'], (int)$_POST['menge'], $bild, $fische];
@@ -262,7 +245,6 @@ $stats = $db->query("SELECT SUM(menge) as n, SUM(preis*menge) as w FROM tackle")
         .fish-chip input { display: none; }
         .fish-chip span { display: block; padding: 6px 12px; background: var(--card); border: 1px solid #334155; border-radius: 15px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; }
         .fish-chip input:checked + span { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
-        /* Lightbox CSS */
         #lightbox { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
         #lightbox img { max-width: 95%; max-height: 95%; border-radius: 8px; }
         #lightbox .close { position: absolute; top: 20px; right: 30px; font-size: 40px; color: #fff; font-weight: bold; cursor: pointer; }
@@ -297,9 +279,8 @@ $stats = $db->query("SELECT SUM(menge) as n, SUM(preis*menge) as w FROM tackle")
         </div>
         <details id="addMenu" style="background:var(--card); padding:10px; border-radius:12px; margin-bottom:10px;" ontoggle="toggleGridVisibility(this)" <?= $is_edit ? 'open' : '' ?>>
             <summary style="cursor:pointer; font-weight:bold; font-size:1rem; color:var(--label);">➕ <?= $is_edit ? $t['model'] : $t['add'] ?></summary>
-            <div id="preview" style="text-align:center; margin-top:8px;"></div>
             <form method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>"><input type="hidden" name="action" value="<?= $is_edit ? 'update' : 'save' ?>"><input type="hidden" name="remote_img" id="f_img">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>"><input type="hidden" name="action" value="<?= $is_edit ? 'update' : 'save' ?>">
                 <?php if($is_edit): ?><input type="hidden" name="id" value="<?= $item['id'] ?>"><?php endif; ?>
                 <input type="hidden" name="current_bild" value="<?= $item['bild'] ?? '' ?>">
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
