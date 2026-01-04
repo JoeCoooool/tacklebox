@@ -2,6 +2,7 @@
 /**
  * TACKLEBOX PRO - Filter Update (Excluding hardware from Grid but including in Stats)
  * Plus: Clickable Detail Image for Fullscreen View
+ * Language Support for Sort-Dropdown added.
  */
 
 ini_set('session.cookie_httponly', 1);
@@ -91,7 +92,7 @@ $texts = [
         'price'=>'Preis (€)', 'lang_btn'=>'EN', 'theme_btn'=>'Design', 'logout'=>'Logout', 
         'backup'=>'Export', 'restore'=>'Import', 'category'=>'Kategorie', 'date'=>'Zielfische', 
         'image'=>'Bild', 'back'=>'← Zurück', 'edit'=>'Bearbeiten', 'delete'=>'Löschen',
-        'confirm'=>'Wirklich löschen?', 'all'=>'Alle',
+        'confirm'=>'Wirklich löschen?', 'all'=>'Alle', 'sort_new' => '✨ Neu', 'sort_abc' => '🔤 A-Z',
         'cats' => ["Hardbaits", "Gummiköder", "Angelruten", "Rollen", "Haken", "Zubehör"],
         'fish' => ["Hecht", "Zander", "Barsch", "Forelle", "Wels", "Aal", "Döbel", "Rapfen", "Karpfen", "Schleie", "Brasse", "Rotauge", "Meerforelle", "Dorsch"]
     ],
@@ -102,7 +103,7 @@ $texts = [
         'price'=>'Price (€)', 'lang_btn'=>'DE', 'theme_btn'=>'Theme', 'logout'=>'Logout', 
         'backup'=>'Export', 'restore'=>'Import', 'category'=>'Category', 'date'=>'Target Fish', 
         'image'=>'Image', 'back'=>'← Back', 'edit'=>'Edit', 'delete'=>'Delete',
-        'confirm'=>'Really delete?', 'all'=>'All',
+        'confirm'=>'Really delete?', 'all'=>'All', 'sort_new' => '✨ New', 'sort_abc' => '🔤 A-Z',
         'cats' => ["Hardbaits", "Softbaits", "Rods", "Reels", "Hooks", "Accessories"],
         'fish' => ["Pike", "Zander", "Perch", "Trout", "Catfish", "Eel", "Chub", "Asp", "Carp", "Tench", "Bream", "Roach", "Sea Trout", "Cod"]
     ]
@@ -258,8 +259,8 @@ $stats = $db->query("SELECT SUM(menge) as n, SUM(preis*menge) as w FROM tackle")
             <h2 style="margin:0;">🎣 <?= $t['title'] ?></h2>
             <div style="display:flex; gap:6px; align-items:center; position:relative;">
                 <select id="topSort" class="top-sort" onchange="setSort(this.value)">
-                    <option value="new">✨ Neu</option>
-                    <option value="abc">🔤 A-Z</option>
+                    <option value="new"><?= $t['sort_new'] ?></option>
+                    <option value="abc"><?= $t['sort_abc'] ?></option>
                 </select>
                 <input type="text" id="liveSearch" style="width:100px;" placeholder="<?= $t['search'] ?>" onkeyup="doSearch()">
                 <button id="gearBtn" onclick="toggleDropdown(event)" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text);">⚙️</button>
