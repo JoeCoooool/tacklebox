@@ -1,6 +1,7 @@
 <?php
 /**
- * TACKLEBOX PRO - Proxmox Version (Scan-Funktion entfernt)
+ * TACKLEBOX PRO - Proxmox Version
+ * KOMPLETT OHNE SCAN-FUNKTION
  */
 
 // --- 1. PFAD & ORDNER SETUP ---
@@ -14,11 +15,7 @@ if (!is_dir($uploadDir)) {
 }
 
 // --- 2. SESSION & SECURITY ---
-ini_set('session.cookie_httponly', 1);
-ini_set('session.use_only_cookies', 1);
-ini_set('session.cookie_samesite', 'Lax');
 session_start();
-
 if (isset($_SESSION['logged_in'])) {
     if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 3600)) {
         session_unset(); session_destroy(); header("Location: index.php"); exit;
@@ -51,14 +48,12 @@ if (!isset($_SESSION['logged_in'])) {
     exit;
 }
 
-// --- 4. DATENBANK VERBINDUNG ---
-try {
-    $db = new PDO('sqlite:'.$dbFile);
-    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $db->exec("CREATE TABLE IF NOT EXISTS tackle (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, hersteller TEXT, kategorie TEXT, farbe TEXT, gewicht REAL, laenge REAL, preis REAL, menge INTEGER DEFAULT 1, bild TEXT, datum TEXT)");
-} catch (Exception $e) { die("DB Fehler: " . $e->getMessage()); }
+// --- 4. DATENBANK ---
+$db = new PDO('sqlite:'.$dbFile);
+$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$db->exec("CREATE TABLE IF NOT EXISTS tackle (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, hersteller TEXT, kategorie TEXT, farbe TEXT, gewicht REAL, laenge REAL, preis REAL, menge INTEGER DEFAULT 1, bild TEXT, datum TEXT)");
 
-// --- 5. AKTIONEN (Hinzufügen, Löschen) ---
+// --- 5. AKTIONEN ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_tackle'])) {
     $bildName = "";
     if (!empty($_FILES['bild']['name'])) {
@@ -92,46 +87,46 @@ $items = $db->query("SELECT * FROM tackle ORDER BY id DESC")->fetchAll(PDO::FETC
     <title>TackleBox Pro</title>
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f1f5f9; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 15px; }
+        .container { max-width: 900px; margin: 0 auto; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .card { background: var(--card); padding: 20px; border-radius: 12px; margin-bottom: 20px; }
-        input, select { width: 100%; padding: 10px; margin: 5px 0; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 6px; box-sizing: border-box; }
-        button { background: var(--accent); color: #000; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .tackle-card { background: var(--card); border-radius: 12px; overflow: hidden; position: relative; }
-        .tackle-card img { width: 100%; height: 200px; object-fit: cover; }
-        .info { padding: 15px; }
-        .delete-btn { color: #f87171; text-decoration: none; font-size: 0.8rem; }
+        .card { background: var(--card); padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        input { width: 100%; padding: 12px; margin: 8px 0; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 8px; box-sizing: border-box; }
+        button { background: var(--accent); color: #000; border: none; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
+        .tackle-card { background: var(--card); border-radius: 12px; overflow: hidden; border: 1px solid #334155; }
+        .tackle-card img { width: 100%; height: 180px; object-fit: cover; }
+        .info { padding: 12px; }
+        .price { color: var(--accent); font-size: 1.2rem; font-weight: bold; }
+        .delete-btn { color: #f87171; text-decoration: none; font-size: 0.85rem; display: block; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🎣 TackleBox Pro</h1>
-            <a href="?logout=1" style="color: #94a3b8;">Logout</a>
+            <a href="?logout=1" style="color: #94a3b8; text-decoration: none;">Abmelden</a>
         </div>
 
         <div class="card">
-            <h3>Neuen Köder hinzufügen</h3>
+            <h3 style="margin-top:0;">Neuer Köder</h3>
             <form method="POST" enctype="multipart/form-data">
-                <input type="text" name="name" placeholder="Name des Köders" required>
-                <div style="display: flex; gap: 10px;">
+                <input type="text" name="name" placeholder="Name (z.B. Zanderkant Kauli)" required>
+                <div style="display: flex; gap: 8px;">
                     <input type="text" name="hersteller" placeholder="Hersteller">
-                    <input type="text" name="kategorie" placeholder="Kategorie (z.B. Wobbler)">
+                    <input type="text" name="kategorie" placeholder="Kategorie">
                 </div>
-                <div style="display: flex; gap: 10px;">
+                <div style="display: flex; gap: 8px;">
                     <input type="text" name="farbe" placeholder="Farbe">
-                    <input type="number" step="0.1" name="gewicht" placeholder="Gewicht (g)">
+                    <input type="number" step="0.01" name="preis" placeholder="Preis €">
                 </div>
-                <div style="display: flex; gap: 10px;">
-                    <input type="number" step="0.1" name="laenge" placeholder="Länge (cm)">
-                    <input type="number" step="0.01" name="preis" placeholder="Preis (€)">
+                <div style="display: flex; gap: 8px;">
+                    <input type="number" step="0.1" name="gewicht" placeholder="Gewicht g">
+                    <input type="number" step="0.1" name="laenge" placeholder="Länge cm">
                 </div>
                 <input type="number" name="menge" value="1" placeholder="Menge">
-                <p style="font-size: 0.8rem; color: #94a3b8; margin: 5px 0;">Foto hochladen:</p>
-                <input type="file" name="bild" accept="image/*">
-                <button type="submit" name="add_tackle" style="margin-top: 15px;">Köder speichern</button>
+                <input type="file" name="bild" accept="image/*" style="border:none; padding-left:0;">
+                <button type="submit" name="add_tackle">Speichern</button>
             </form>
         </div>
 
@@ -139,15 +134,15 @@ $items = $db->query("SELECT * FROM tackle ORDER BY id DESC")->fetchAll(PDO::FETC
             <?php foreach ($items as $item): ?>
                 <div class="tackle-card">
                     <?php if($item['bild']): ?>
-                        <img src="uploads/<?php echo $item['bild']; ?>" alt="Tackle">
+                        <img src="uploads/<?php echo $item['bild']; ?>" alt="Köder">
                     <?php endif; ?>
                     <div class="info">
                         <strong><?php echo htmlspecialchars($item['name']); ?></strong><br>
-                        <small><?php echo htmlspecialchars($item['hersteller']); ?> | <?php echo htmlspecialchars($item['kategorie']); ?></small><br>
-                        <span style="color: var(--accent); font-weight: bold;"><?php echo $item['preis']; ?> €</span>
-                        <div style="margin-top: 10px;">
-                            <a href="?delete=<?php echo $item['id']; ?>" class="delete-btn" onclick="return confirm('Löschen?')">Löschen</a>
-                        </div>
+                        <span style="font-size: 0.9rem; color: #94a3b8;">
+                            <?php echo htmlspecialchars($item['hersteller']); ?> | <?php echo htmlspecialchars($item['kategorie']); ?>
+                        </span><br>
+                        <div class="price"><?php echo number_format($item['preis'], 2, ',', '.'); ?> €</div>
+                        <a href="?delete=<?php echo $item['id']; ?>" class="delete-btn" onclick="return confirm('Wirklich löschen?')">🗑 Löschen</a>
                     </div>
                 </div>
             <?php endforeach; ?>
