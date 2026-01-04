@@ -1,15 +1,15 @@
 #!/bin/bash
-# TACKLEBOX PROMOX-INSTALLER via GITHUB
+# TACKLEBOX ULTIMATE AUTOMATION
 set -e
 
-echo "🎣 Starte TackleBox LXC Installation..."
+echo "🎣 Starte TackleBox Voll-Automatisierung..."
 
-# 1. Container ID & Storage (Automatisch nächste ID)
+# 1. Container ID & Storage Setup
 CT_ID=$(pvesh get /cluster/nextid | tr -d '\r' | tr -d ' ')
-STORAGE="local-lvm" # Falls dein Storage anders heißt, hier anpassen
+STORAGE="local-lvm" # Falls dein Storage anders heißt (z.B. 'local'), hier ändern
 
-# 2. Container erstellen (Debian 12)
-echo "Erstelle Container $CT_ID..."
+# 2. LXC Container erstellen
+echo "📦 Erstelle Container $CT_ID..."
 pct create $CT_ID local:vztmpl/debian-12-standard_12.0-1_amd64.tar.zst \
   --hostname tacklebox \
   --password tacklebox123 \
@@ -18,42 +18,36 @@ pct create $CT_ID local:vztmpl/debian-12-standard_12.0-1_amd64.tar.zst \
   --memory 512 \
   --unprivileged 1
 
-# 3. Container starten & warten
+# 3. Starten und auf Netzwerk warten
 pct start $CT_ID
-echo "Warte auf Netzwerk..."
-sleep 10
+echo "🌐 Warte auf Netzwerk-Verbindung..."
+sleep 12
 
-# 4. PHP & Module installieren
-echo "Installiere Pakete..."
+# 4. PHP-Umgebung installieren
+echo "⚙️ Installiere Webserver und PHP-Module..."
 pct exec $CT_ID -- apt-get update
-pct exec $CT_ID -- apt-get install -y apache2 php php-sqlite3 php-gd php-curl php-xml php-zip libapache2-mod-php
+pct exec $CT_ID -- apt-get install -y apache2 php php-sqlite3 php-gd php-curl php-xml php-zip libapache2-mod-php curl
 
-# 5. PHP-CODE DIREKT IN CONTAINER SCHREIBEN
-# Wir nutzen 'EOF' in Anführungszeichen, damit Bash die PHP-Variablen ($) ignoriert!
-echo "Schreibe index.php..."
-pct exec $CT_ID -- bash -c "cat << 'EOF' > /var/www/html/index.php
-<?php
-// HIER DEIN KOMPLETTER PHP CODE
-ini_set('display_errors', 1); 
-error_reporting(E_ALL);
-session_start();
-\$dbFile = 'tackle_app_db_9f2a.sqlite';
-echo '<h1>TackleBox ist bereit!</h1>';
-echo '<p>PHP Version: ' . phpversion() . '</p>';
-// ... hier den Rest deines Codes einfügen ...
-EOF"
+# 5. AUTOMATISCHER CODE-DOWNLOAD
+# Hier wird dein echter PHP-Code von GitHub geladen
+echo "📥 Lade echten TackleBox Code von GitHub..."
+pct exec $CT_ID -- curl -sL -o /var/www/html/index.php https://raw.githubusercontent.com/JoeCoooool/tacklebox/main/index.php
 
-# 6. Rechte setzen (Das Wichtigste gegen Fehler 500)
-echo "Setze Berechtigungen..."
+# 6. Berechtigungen & Verzeichnisse (WICHTIG!)
+echo "🔐 Setze Schreibrechte..."
 pct exec $CT_ID -- rm -f /var/www/html/index.html
 pct exec $CT_ID -- mkdir -p /var/www/html/uploads
 pct exec $CT_ID -- chown -R www-data:www-data /var/www/html/
 pct exec $CT_ID -- chmod -R 775 /var/www/html/
+
+# 7. Webserver Neustart
 pct exec $CT_ID -- systemctl restart apache2
 
-# 7. Abschluss
+# 8. IP-Adresse für den Benutzer anzeigen
 IP=$(pct exec $CT_ID -- hostname -I | awk '{print $1}' | tr -d '\r' | tr -d ' ')
+
 echo "---------------------------------------------------"
-echo "✅ ERFOLGREICH INSTALLIERT!"
+echo "✅ ALLES FERTIG!"
+echo "Deine TackleBox ist nun bereit."
 echo "URL: http://$IP"
 echo "---------------------------------------------------"
