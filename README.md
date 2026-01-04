@@ -1,6 +1,6 @@
 🎣 TackleBox Pro
 
-![TackleBox Main Screen](screenshots/Screenshot1.png)
+![TackleBox Main Screen](./screenshots/Screenshot1.png)
 
 TackleBox Pro ist ein leichtgewichtiges, webbasiertes Inventarsystem, das speziell für Angler entwickelt wurde, um ihre Köder, Ruten, Rollen und Zubehör effizient zu verwalten. Die App bietet eine schnelle Übersicht über den Bestand, den Gesamtwert der Ausrüstung und detaillierte Statistiken zu einzelnen Kategorien.
 ✨ Kernfunktionen
