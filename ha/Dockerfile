@@ -1,7 +1,7 @@
 ARG BUILD_FROM
 FROM $BUILD_FROM
 
-# Pakete installieren (ohne die "82" Endung, damit Alpine sie findet)
+# Pakete installieren
 RUN apk add --no-cache \
     apache2 \
     php83 \
@@ -14,8 +14,10 @@ RUN apk add --no-cache \
     php83-fileinfo \
     bash
 
-# Verzeichnis für die Website vorbereiten
 WORKDIR /var/www/localhost/htdocs
+
+# --- DIESE ZEILE IST NEU: Löscht die "It works!" Seite ---
+RUN rm -f index.html
 
 # Kopiere deine index.php
 COPY index.php .
