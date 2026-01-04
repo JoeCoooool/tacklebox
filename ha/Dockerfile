@@ -14,15 +14,16 @@ RUN apk add --no-cache \
     php83-fileinfo \
     bash
 
+# Verzeichnis für die Website
 WORKDIR /var/www/localhost/htdocs
 
-# --- DIESE ZEILE IST NEU: Löscht die "It works!" Seite ---
+# --- WICHTIG: Standard Apache-Datei löschen ---
 RUN rm -f index.html
 
-# Kopiere deine index.php
+# Deine index.php kopieren
 COPY index.php .
 
-# Rechte setzen
+# Rechte setzen (Apache muss in seine Ordner schreiben dürfen)
 RUN mkdir -p /run/apache2 && \
     mkdir -p uploads && \
     chown -R apache:apache /var/www/localhost/htdocs && \
