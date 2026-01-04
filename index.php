@@ -1,3 +1,4 @@
+cat << 'EOF' > /var/www/html/index.php
 <?php
 /**
  * TACKLEBOX PRO - Filter Update (Excluding hardware from Grid but including in Stats)
@@ -307,7 +308,7 @@ $stats = $db->query("SELECT SUM(menge) as n, SUM(preis*menge) as w FROM tackle")
                     <div><label class="form-label"><?= $t['model'] ?></label><input type="text" name="name" id="f_n" value="<?= htmlspecialchars($item['name']??'') ?>" required></div>
                 </div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                    <div><label class="form-label"><?= $t['color'] ?></label><input type="text" name="farbe" value="<?= htmlspecialchars($item['farbe']??'') ?>"></div>
+                    <div><label class="form-label"><?= $t['farbe'] ?></label><input type="text" name="farbe" value="<?= htmlspecialchars($item['farbe']??'') ?>"></div>
                     <div><label class="form-label"><?= $t['category'] ?></label><select name="kategorie"><?php foreach($db_cats as $index => $db_name): ?><option value="<?= $db_name ?>" <?= ($item['kategorie']??'')==$db_name?'selected':'' ?>><?= $t['cats'][$index] ?></option><?php endforeach; ?></select></div>
                 </div>
                 <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
@@ -340,7 +341,7 @@ $stats = $db->query("SELECT SUM(menge) as n, SUM(preis*menge) as w FROM tackle")
             <div class="detail-img-box" onclick="showLightbox('uploads/<?= $item['bild'] ?>')"><?php if($item['bild']): ?><img src="uploads/<?= $item['bild'] ?>"><?php else: ?>🎣<?php endif; ?></div>
             <h1 style="margin:15px 0; font-size:1.6rem;"><?= htmlspecialchars($item['name']) ?></h1>
             <div class="mini-stats">
-                <div class="mini-card"><label><?= $t['color'] ?></label><b><?= htmlspecialchars($item['farbe'] ?: '-') ?></b></div>
+                <div class="mini-card"><label><?= $t['farbe'] ?></label><b><?= htmlspecialchars($item['farbe'] ?: '-') ?></b></div>
                 <div class="mini-card"><label><?= $t['length'] ?></label><b><?= (float)$item['laenge'] ?> cm</b></div>
                 <div class="mini-card"><label><?= $t['weight'] ?></label><b><?= (float)$item['gewicht'] ?> g</b></div>
                 <div class="mini-card"><label><?= $t['price'] ?></label><b><?= number_format($item['preis'],2) ?> €</b></div>
@@ -376,4 +377,70 @@ window.addEventListener('click', function(e) {
 function toggleGridVisibility(details) { const grid = document.getElementById('mainGridContainer'), nav = document.getElementById('bottomNav'), stats = document.getElementById('statsHeader'); if (details.open) { grid.style.display='none'; nav.style.display='none'; if(stats) stats.style.display='none'; } else { grid.style.display='block'; nav.style.display='flex'; if(stats) stats.style.display='grid'; } }
 function showLightbox(src) { if(!src || src.endsWith('/')) return; document.getElementById('lbImg').src = src; document.getElementById('lightbox').style.display = 'flex'; }
 
-async function loadStats(k) { try { const r = await fetch('index.php?get_stats=' + encodeURIComponent(k));
+async function loadStats(k) { 
+    try { 
+        const r = await fetch('index.php?get_stats=' + encodeURIComponent(k));
+        const d = await r.json();
+        document.getElementById('stat_n').innerText = d.n;
+        document.getElementById('stat_w').innerText = d.w + ' €';
+    } catch(e){} 
+}
+
+function doSearch() {
+    currentSearch = document.getElementById('liveSearch').value;
+    offset = 0; allLoaded = false;
+    document.getElementById('tackleGrid').innerHTML = '';
+    loadMore();
+}
+
+function setSort(s) {
+    currentSort = s;
+    offset = 0; allLoaded = false;
+    document.getElementById('tackleGrid').innerHTML = '';
+    loadMore();
+}
+
+function filterKat(k) {
+    currentKat = k;
+    offset = 0; allLoaded = false;
+    document.querySelectorAll('.kat-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-' + k).classList.add('active');
+    document.getElementById('tackleGrid').innerHTML = '';
+    loadStats(k);
+    loadMore();
+}
+
+async function loadMore() {
+    if (loading || allLoaded) return;
+    loading = true;
+    try {
+        const r = await fetch(`index.php?load_more=1&offset=${offset}&filter_kat=${currentKat}&q=${encodeURIComponent(currentSearch)}&sort=${currentSort}`);
+        const data = await r.json();
+        if (data.length < 16) allLoaded = true;
+        const grid = document.getElementById('tackleGrid');
+        data.forEach(i => {
+            const card = document.createElement('a');
+            card.className = 'card';
+            card.href = '?id=' + i.id;
+            const imgHtml = i.bild ? `<img src="uploads/${i.bild}" loading="lazy">` : '<span style="font-size:2rem;">🎣</span>';
+            card.innerHTML = `<div class="card-img">${imgHtml}</div><div class="card-info"><b>${escapeHTML(i.hersteller)}</b><br>${escapeHTML(i.name)}<br><span style="color:var(--accent); font-weight:bold;">${parseFloat(i.preis).toFixed(2)} €</span></div>`;
+            grid.appendChild(card);
+        });
+        offset += 16;
+    } catch(e){}
+    loading = false;
+}
+
+// Infinite Scroll
+const observer = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) loadMore();
+}, { threshold: 0.1 });
+const sentinel = document.getElementById('sentinel');
+if (sentinel) observer.observe(sentinel);
+
+// Start
+if (document.getElementById('tackleGrid')) loadMore();
+</script>
+</body>
+</html>
+EOF
