@@ -1,10 +1,4 @@
-#!/usr/bin/env bash
-set -e
-
-echo "Starte TackleBox Pro..."
-
-# Apache PID File aufräumen, falls vorhanden
-rm -f /run/apache2/httpd.pid
-
-# Apache im Vordergrund starten
+#!/usr/bin/with-contenv bashio
+echo "Starte TackleBox..."
+mkdir -p /run/apache2
 exec /usr/sbin/httpd -D FOREGROUND
