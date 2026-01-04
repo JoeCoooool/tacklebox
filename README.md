@@ -37,9 +37,4 @@ TackleBox Pro ist ein leichtgewichtiges, webbasiertes Inventarsystem, das spezie
 
 📸 Screenshots
 
-(An dieser Stelle kannst du später Screenshots deiner App einfügen, um die UI zu zeigen)
-Mein Tipp für die Readme:
-
-Wenn du das auf GitHub hochlädst, ist es immer gut, ein Bild der App direkt oben unter die Überschrift zu packen. Das "verkauft" das Projekt sofort visuell.
-
-Soll ich dir noch einen Abschnitt hinzufügen, wie man die Datenbank manuell sichert, oder passt das so für dich?
+?
