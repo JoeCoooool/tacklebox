@@ -1,28 +1,31 @@
-ARG BUILD_FROM=ghcr.io/hassio-addons/base:14.0.0
+ARG BUILD_FROM
 FROM $BUILD_FROM
 
-# Installiere Apache und PHP
+# Pakete installieren (Allgemeine Namen für bessere Kompatibilität)
 RUN apk add --no-cache \
-    php82 \
-    php82-apache2 \
-    php82-pdo_sqlite \
-    php82-session \
-    php82-json \
-    php82-zip \
-    apache2
+    apache2 \
+    php \
+    php-apache2 \
+    php-pdo_sqlite \
+    php-sqlite3 \
+    php-session \
+    php-json \
+    php-ctype \
+    php-fileinfo \
+    php-curl \
+    php-zip \
+    bash
 
-# Verzeichnis für die Webseite
+# Verzeichnis vorbereiten
 WORKDIR /var/www/localhost/htdocs
-
-# Kopiere deine App-Datei (index.php muss im selben Ordner liegen)
 COPY index.php .
 
-# Erstelle den Uploads-Ordner und setze Rechte für den Webserver
+# Rechte setzen
 RUN mkdir -p uploads && \
     chown -R apache:apache /var/www/localhost/htdocs && \
     chmod -R 777 /var/www/localhost/htdocs
 
-# Start-Skript für Apache
+# Start-Skript
 COPY run.sh /
 RUN chmod a+x /run.sh
 
