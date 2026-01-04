@@ -1,6 +1,6 @@
 name: "TackleBox Pro"
 description: "Verwalte dein Angel-Equipment direkt in Home Assistant"
-version: "1.0.3"
+version: "1.0.4"
 slug: "tacklebox_pro"
 init: false
 arch:
@@ -15,5 +15,6 @@ ingress: true
 ingress_port: 80
 options: {}
 schema: {}
+
 
 
