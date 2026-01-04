@@ -14,22 +14,23 @@ RUN apk add --no-cache \
     php83-fileinfo \
     bash
 
-# Verzeichnis für die Website
+# Apache Konfiguration: index.php als Standard setzen
+RUN sed -i 's/DirectoryIndex index.html/DirectoryIndex index.php index.html/' /etc/apache2/httpd.conf
+
+# Arbeitsverzeichnis säubern und vorbereiten
 WORKDIR /var/www/localhost/htdocs
+RUN rm -rf *
 
-# --- WICHTIG: Standard Apache-Datei löschen ---
-RUN rm -f index.html
-
-# Deine index.php kopieren
+# DEINE Datei kopieren
 COPY index.php .
 
-# Rechte setzen (Apache muss in seine Ordner schreiben dürfen)
+# Rechte setzen
 RUN mkdir -p /run/apache2 && \
     mkdir -p uploads && \
     chown -R apache:apache /var/www/localhost/htdocs && \
     chmod -R 777 /var/www/localhost/htdocs /run/apache2
 
-# Start-Skript kopieren und reparieren
+# Start-Skript
 COPY run.sh /
 RUN sed -i 's/\r$//' /run.sh && chmod a+x /run.sh
 
