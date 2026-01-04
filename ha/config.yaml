@@ -1,0 +1,15 @@
+name: "TackleBox Pro"
+description: "Verwalte dein Angel-Equipment direkt in Home Assistant"
+version: "1.0.0"
+slug: "tacklebox_pro"
+arch:
+  - aarch64
+  - amd64
+  - armv7
+init: false
+panel_icon: "mdi:hook"
+panel_title: "TackleBox"
+ingress: true
+ingress_port: 80
+options: {}
+schema: {}
