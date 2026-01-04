@@ -1,6 +1,10 @@
-#!/usr/bin/bashio
+#!/usr/bin/env bash
+set -e
 
-bashio::log.info "Starte TackleBox Pro Webserver..."
+echo "Starte TackleBox Pro..."
 
-# Starte Apache im Hintergrund
-httpd -D FOREGROUND
+# Apache PID File aufräumen, falls vorhanden
+rm -f /run/apache2/httpd.pid
+
+# Apache im Vordergrund starten
+exec /usr/sbin/httpd -D FOREGROUND
