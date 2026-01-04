@@ -36,5 +36,6 @@ TackleBox Pro ist ein leichtgewichtiges, webbasiertes Inventarsystem, das spezie
     bash -c "$(curl -sL https://raw.githubusercontent.com/JoeCoooool/tacklebox/main/setup.sh | tr -d '\r')"
 
 📸 Screenshots
-
-?
+![TackleBox Main Screen](./screenshots/Screenshot2.png)
+![TackleBox Main Screen](./screenshots/Screenshot3.png)
+![TackleBox Main Screen](./screenshots/Screenshot4.png)
