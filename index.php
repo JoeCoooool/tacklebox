@@ -1,6 +1,7 @@
 <?php
 /**
- * TACKLEBOX PRO - Manuelle Version (Scan-Funktion entfernt)
+ * TACKLEBOX PRO - Filter Update (Excluding hardware from Grid but including in Stats)
+ * Plus: Clickable Detail Image for Fullscreen View
  */
 
 ini_set('session.cookie_httponly', 1);
@@ -77,6 +78,14 @@ header("X-Frame-Options: DENY");
 
 if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
+function is_safe_url($url) {
+    $p = parse_url($url);
+    if (!$p || !in_array($p['scheme'], ['http', 'https'])) return false;
+    $ip = gethostbyname($p['host'] ?? '');
+    if (!$ip || filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) return false;
+    return $url;
+}
+
 $lang = $_SESSION['lang'] ?? 'de';
 if (isset($_GET['lang'])) { $lang = $_GET['lang'] == 'en' ? 'en' : 'de'; $_SESSION['lang'] = $lang; }
 $theme = $_SESSION['theme'] ?? 'dark';
@@ -131,7 +140,7 @@ if (isset($_GET['get_stats'])) {
     exit;
 }
 
-// --- BACKUP / RESTORE ---
+// --- BACKUP / RESTORE / SCANNER ---
 if (isset($_GET['backup_export'])) {
     $zip = new ZipArchive(); $zipName = 'tackle_backup.zip';
     if ($zip->open($zipName, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
@@ -154,8 +163,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['restore_file'])) {
         $zip->close(); header("Location: index.php"); exit;
     }
 }
-
-// --- LOAD MORE / FILTER ---
+if (isset($_GET['fetch_url'])) {
+    $url = is_safe_url($_GET['fetch_url']); if (!$url) { echo json_encode(['success'=>false]); exit; }
+    header('Content-Type: application/json');
+    $ch = curl_init($url); curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER=>true, CURLOPT_FOLLOWLOCATION=>false, CURLOPT_TIMEOUT=>5, CURLOPT_MAXFILESIZE=>500000, CURLOPT_USERAGENT=>'Mozilla/5.0']);
+    $html = curl_exec($ch); curl_close($ch);
+    $doc = new DOMDocument(); @$doc->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
+    $xpath = new DOMXPath($doc);
+    $res = ['success'=>true, 'name'=>'', 'preis'=>'', 'bild_url'=>'', 'brand'=>'', 'gewicht'=>'', 'laenge'=>''];
+    $brandNodes = $xpath->query('//meta[@property="og:product:brand"]/@content | //meta[@name="twitter:data2"]/@content');
+    if($brandNodes->length) $res['brand'] = trim($brandNodes->item(0)->nodeValue);
+    $titleNodes = $xpath->query('//meta[@property="og:title"]/@content | //h1');
+    if($titleNodes->length) {
+        $cleanTitle = trim(preg_split('/[|»\-]/', $titleNodes->item(0)->nodeValue)[0]);
+        if (!empty($res['brand'])) { $res['name'] = trim(preg_replace('/^' . preg_quote($res['brand'], '/') . '/i', '', $cleanTitle)); }
+        else { $parts = explode(' ', $cleanTitle, 2); $res['brand'] = $parts[0]; $res['name'] = $parts[1] ?? $parts[0]; }
+    }
+    $img = $xpath->query('//meta[@property="og:image"]/@content');
+    if($img->length) $res['bild_url'] = is_safe_url($img->item(0)->nodeValue) ? $img->item(0)->nodeValue : '';
+    if (preg_match('/"price":\s*"(\d+[\d,.]*)"/', $html, $m)) $res['preis'] = str_replace(',', '.', $m[1]);
+    if (preg_match('/(\d+[,.]?\d*)\s*(g|gr|gramm)/i', $html, $m)) $res['gewicht'] = str_replace(',', '.', $m[1]);
+    if (preg_match('/(\d+[,.]?\d*)\s*(cm|mm)/i', $html, $m)) { $v = (float)str_replace(',', '.', $m[1]); $res['laenge'] = (stripos($m[2], 'mm') !== false) ? $v/10 : $v; }
+    echo json_encode($res); exit;
+}
 if (isset($_GET['load_more'])) {
     header('Content-Type: application/json');
     $offset = (int)($_GET['offset'] ?? 0);
@@ -172,7 +202,6 @@ if (isset($_GET['load_more'])) {
     echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC)); exit;
 }
 
-// --- SAVE / DELETE ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['action']) || isset($_POST['delete_id']))) {
     if (($_POST['csrf_token'] ?? '') !== $_SESSION['csrf_token']) die("CSRF mismatch");
     if (isset($_POST['delete_id'])) { 
@@ -194,6 +223,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['action']) || isset($
                 $bild = bin2hex(random_bytes(16)).'.'.$ext;
                 if(!is_dir('uploads')) mkdir('uploads', 0755, true); 
                 move_uploaded_file($_FILES['bild']['tmp_name'], "uploads/".$bild);
+            }
+        } elseif (!empty($_POST['remote_img']) && is_safe_url($_POST['remote_img'])) {
+            $ctx = stream_context_create(['http' => ['timeout' => 5]]);
+            $data = @file_get_contents($_POST['remote_img'], false, $ctx);
+            if($data && strlen($data) < 2000000) { 
+                if (!empty($_POST['current_bild'])) { $oldFile = "uploads/" . $_POST['current_bild']; if (file_exists($oldFile)) unlink($oldFile); }
+                $bild = bin2hex(random_bytes(16)).'.jpg'; 
+                if(!is_dir('uploads')) mkdir('uploads', 0755, true);
+                file_put_contents("uploads/".$bild, $data); 
             }
         }
         $fische = isset($_POST['zielfische']) ? implode(', ', $_POST['zielfische']) : '';
@@ -246,6 +284,7 @@ $stats = $db->query("SELECT SUM(menge) as n, SUM(preis*menge) as w FROM tackle")
         .fish-chip input { display: none; }
         .fish-chip span { display: block; padding: 6px 12px; background: var(--card); border: 1px solid #334155; border-radius: 15px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; }
         .fish-chip input:checked + span { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
+        /* Lightbox CSS */
         #lightbox { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
         #lightbox img { max-width: 95%; max-height: 95%; border-radius: 8px; }
         #lightbox .close { position: absolute; top: 20px; right: 30px; font-size: 40px; color: #fff; font-weight: bold; cursor: pointer; }
@@ -280,24 +319,26 @@ $stats = $db->query("SELECT SUM(menge) as n, SUM(preis*menge) as w FROM tackle")
         </div>
         <details id="addMenu" style="background:var(--card); padding:10px; border-radius:12px; margin-bottom:10px;" ontoggle="toggleGridVisibility(this)" <?= $is_edit ? 'open' : '' ?>>
             <summary style="cursor:pointer; font-weight:bold; font-size:1rem; color:var(--label);">➕ <?= $is_edit ? $t['model'] : $t['add'] ?></summary>
-            <form method="POST" enctype="multipart/form-data" style="margin-top:10px;">
-                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>"><input type="hidden" name="action" value="<?= $is_edit ? 'update' : 'save' ?>">
+            <div style="display:flex; gap:6px; margin-top:10px;"><input type="text" id="link_in" placeholder="Shop-Link..." style="padding:6px;"><button onclick="runScan()" id="scan_btn" style="background:var(--accent); border:none; border-radius:6px; padding:0 15px; cursor:pointer; font-weight:bold; font-size:0.9rem;">Scan</button></div>
+            <div id="preview" style="text-align:center; margin-top:8px;"></div>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>"><input type="hidden" name="action" value="<?= $is_edit ? 'update' : 'save' ?>"><input type="hidden" name="remote_img" id="f_img">
                 <?php if($is_edit): ?><input type="hidden" name="id" value="<?= $item['id'] ?>"><?php endif; ?>
                 <input type="hidden" name="current_bild" value="<?= $item['bild'] ?? '' ?>">
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                    <div><label class="form-label"><?= $t['brand'] ?></label><input type="text" name="hersteller" value="<?= htmlspecialchars($item['hersteller']??'') ?>" required></div>
-                    <div><label class="form-label"><?= $t['model'] ?></label><input type="text" name="name" value="<?= htmlspecialchars($item['name']??'') ?>" required></div>
+                    <div><label class="form-label"><?= $t['brand'] ?></label><input type="text" name="hersteller" id="f_h" value="<?= htmlspecialchars($item['hersteller']??'') ?>" required></div>
+                    <div><label class="form-label"><?= $t['model'] ?></label><input type="text" name="name" id="f_n" value="<?= htmlspecialchars($item['name']??'') ?>" required></div>
                 </div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                     <div><label class="form-label"><?= $t['color'] ?></label><input type="text" name="farbe" value="<?= htmlspecialchars($item['farbe']??'') ?>"></div>
                     <div><label class="form-label"><?= $t['category'] ?></label><select name="kategorie"><?php foreach($db_cats as $index => $db_name): ?><option value="<?= $db_name ?>" <?= ($item['kategorie']??'')==$db_name?'selected':'' ?>><?= $t['cats'][$index] ?></option><?php endforeach; ?></select></div>
                 </div>
                 <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
-                    <div><label class="form-label"><?= $t['weight'] ?></label><input type="number" step="0.01" name="gewicht" value="<?= $item['gewicht']??'' ?>"></div>
-                    <div><label class="form-label"><?= $t['length'] ?></label><input type="number" step="0.1" name="laenge" value="<?= $item['laenge']??'' ?>"></div>
+                    <div><label class="form-label"><?= $t['weight'] ?></label><input type="number" step="0.01" name="gewicht" id="f_g" value="<?= $item['gewicht']??'' ?>"></div>
+                    <div><label class="form-label"><?= $t['length'] ?></label><input type="number" step="0.1" name="laenge" id="f_l" value="<?= $item['laenge']??'' ?>"></div>
                     <div><label class="form-label"><?= $t['qty'] ?></label><input type="number" name="menge" value="<?= $item['menge']??1 ?>"></div>
                 </div>
-                <div><label class="form-label"><?= $t['price'] ?></label><input type="number" step="0.01" name="preis" value="<?= $item['preis']??'' ?>"></div>
+                <div><label class="form-label"><?= $t['price'] ?></label><input type="number" step="0.01" name="preis" id="f_p" value="<?= $item['preis']??'' ?>"></div>
                 <div>
                     <label class="form-label"><?= $t['date'] ?></label>
                     <div class="fish-selector">
@@ -334,12 +375,11 @@ $stats = $db->query("SELECT SUM(menge) as n, SUM(preis*menge) as w FROM tackle")
         </div>
     <?php endif; ?>
 </div>
-
 <div class="kat-bar-wrapper" id="bottomNav" style="<?= ($item || $is_edit) ? 'display:none;' : '' ?>">
     <div class="kat-bar"><div onclick="filterKat('all')" class="kat-btn active" id="btn-all"><?= $t['all'] ?></div><?php foreach($db_cats as $index => $db_name): ?><div onclick="filterKat('<?= $db_name ?>')" class="kat-btn" id="btn-<?= $db_name ?>"><?= $t['cats'][$index] ?></div><?php endforeach; ?></div>
 </div>
-
 <script>
+function escapeHTML(str) { if(!str) return ''; return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 let offset = 0, currentKat = 'all', currentSearch = '', currentSort = 'new', loading = false, allLoaded = false;
 
 function toggleDropdown(e) { 
@@ -351,54 +391,46 @@ function toggleDropdown(e) {
 window.addEventListener('click', function(e) {
     let d = document.getElementById("myDropdown");
     let btn = document.getElementById("gearBtn");
-    if (d && d.style.display === "flex" && !d.contains(e.target) && e.target !== btn) d.style.display = "none";
+    if (d && d.style.display === "flex" && !d.contains(e.target) && e.target !== btn) {
+        d.style.display = "none";
+    }
 });
 
 function toggleGridVisibility(details) { const grid = document.getElementById('mainGridContainer'), nav = document.getElementById('bottomNav'), stats = document.getElementById('statsHeader'); if (details.open) { grid.style.display='none'; nav.style.display='none'; if(stats) stats.style.display='none'; } else { grid.style.display='block'; nav.style.display='flex'; if(stats) stats.style.display='grid'; } }
 function showLightbox(src) { if(!src || src.endsWith('/')) return; document.getElementById('lbImg').src = src; document.getElementById('lightbox').style.display = 'flex'; }
-
-async function loadStats(k) { try { const r = await fetch('index.php?get_stats=' + encodeURIComponent(k)); const d = await r.json(); document.getElementById('stat_n').innerText = d.n; document.getElementById('stat_w').innerText = parseFloat(d.w).toLocaleString('de-DE', {minimumFractionDigits: 2}) + ' €'; } catch(e){} }
-
-async function loadTackle(reset = false) {
-    if (loading || (allLoaded && !reset)) return;
-    loading = true;
-    if (reset) { offset = 0; document.getElementById('tackleGrid').innerHTML = ''; allLoaded = false; }
+async function runScan() { const u = document.getElementById('link_in').value; if(!u) return; document.getElementById('scan_btn').innerText = "..."; try { const r = await fetch('index.php?fetch_url=' + encodeURIComponent(u)); const d = await r.json(); if(d.success) { document.getElementById('f_h').value = d.brand || ''; document.getElementById('f_n').value = d.name || ''; document.getElementById('f_p').value = d.preis || ''; document.getElementById('f_g').value = d.gewicht || ''; document.getElementById('f_l').value = d.laenge || ''; document.getElementById('f_img').value = d.bild_url; if(d.bild_url) document.getElementById('preview').innerHTML = `<img src="${encodeURI(d.bild_url)}" style="width:180px; height:100px; object-fit:cover; border-radius:8px; background:#000; margin-bottom:5px;">`; } } catch(e){} document.getElementById('scan_btn').innerText = "Scan"; }
+async function loadStats(k) { try { const r = await fetch('index.php?get_stats=' + encodeURIComponent(k)); const d = await r.json(); document.getElementById('stat_n').innerText = d.n; document.getElementById('stat_w').innerText = parseFloat(d.w).toLocaleString('de-DE', {minimumFractionDigits:2}) + ' €'; } catch(e) {} }
+async function loadItems(reset = false) {
+    const grid = document.getElementById('tackleGrid'); if (!grid || loading || (allLoaded && !reset)) return;
+    loading = true; if (reset) { offset = 0; allLoaded = false; grid.innerHTML = ''; }
     try {
-        const r = await fetch(`index.php?load_more=1&offset=${offset}&filter_kat=${currentKat}&q=${encodeURIComponent(currentSearch)}&sort=${currentSort}`);
+        const r = await fetch(`index.php?load_more=1&offset=${offset}&filter_kat=${currentKat}&q=${currentSearch}&sort=${currentSort}`);
         const data = await r.json();
-        if (data.length < 16) allLoaded = true;
-        const grid = document.getElementById('tackleGrid');
-        data.forEach(item => {
-            const card = document.createElement('a');
-            card.href = `?id=${item.id}`;
-            card.className = 'card';
-            card.innerHTML = `<div class="card-img">${item.bild ? `<img src="uploads/${item.bild}" loading="lazy">` : '🎣'}</div>
-                <div class="card-info">
-                    <div style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.hersteller}</div>
-                    <div style="color:var(--label); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.name}</div>
-                    <div style="margin-top:4px; font-weight:bold; color:#4ade80;">${item.menge}x</div>
-                </div>`;
-            grid.appendChild(card);
-        });
-        offset += 16;
-    } catch (e) {}
+        if (data.length === 0) { allLoaded = true; } 
+        else {
+            data.forEach(i => {
+                let info = []; if(i.laenge > 0) info.push(escapeHTML(i.laenge) + 'cm'); if(i.gewicht > 0) info.push(escapeHTML(i.gewicht) + 'g');
+                grid.insertAdjacentHTML('beforeend', `
+                    <a href="?id=${i.id}" class="card">
+                        <div class="card-img">${i.bild?`<img src="uploads/${escapeHTML(i.bild)}" loading="lazy">`:'\uD83C\uDFA3'}</div>
+                        <div class="card-info">
+                            <b style="color:var(--accent);">${escapeHTML(i.hersteller)}</b><br>
+                            <strong>${escapeHTML(i.name)}</strong><br>
+                            <span style="opacity:0.6">${info.join(' • ')}</span>
+                            <span style="position:absolute; bottom:8px; right:8px; opacity:0.6;">${parseInt(i.menge)}x</span>
+                        </div>
+                    </a>`);
+            });
+            offset += data.length;
+        }
+    } catch(e){}
     loading = false;
 }
-
-function doSearch() { currentSearch = document.getElementById('liveSearch').value; loadTackle(true); }
-function setSort(val) { currentSort = val; loadTackle(true); }
-function filterKat(k) {
-    currentKat = k;
-    document.querySelectorAll('.kat-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('btn-' + k).classList.add('active');
-    loadStats(k);
-    loadTackle(true);
-}
-
-const observer = new IntersectionObserver(entries => { if (entries[0].isIntersecting) loadTackle(); }, { threshold: 0.1 });
-if (document.getElementById('sentinel')) observer.observe(document.getElementById('sentinel'));
-
-window.onload = () => { if(document.getElementById('tackleGrid')) loadTackle(); };
+function filterKat(k) { document.querySelectorAll('.kat-btn').forEach(b=>b.classList.remove('active')); let target = document.getElementById('btn-'+k); if(target) target.classList.add('active'); else document.getElementById('btn-all').classList.add('active'); currentKat = k; loadItems(true); loadStats(k); }
+function doSearch() { currentSearch = document.getElementById('liveSearch').value; loadItems(true); }
+function setSort(s) { currentSort = s; loadItems(true); }
+const observer = new IntersectionObserver(entries => { if (entries[0].isIntersecting) loadItems(); }, { threshold: 0.1 });
+window.addEventListener('DOMContentLoaded', () => { const sentinel = document.getElementById('sentinel'); if(sentinel) observer.observe(sentinel); loadItems(); });
 </script>
 </body>
 </html>
