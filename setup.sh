@@ -8,12 +8,12 @@
 
 set -e
 
-### Helper Script Framework ###
+### Load Proxmox Helper Script Framework ###
 source /dev/stdin <<<"$(wget -qLO - https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/build.func)"
 
 header_info "TackleBox Pro Installer"
 
-### Default Variables (can be overridden by config) ###
+### Default Variables ###
 APP="TackleBox Pro"
 CT_OS="debian"
 CT_OS_VERSION="12"
@@ -23,8 +23,10 @@ CT_DISK="4"
 CT_CORES="1"
 CT_NET="dhcp"
 CT_STORAGE="${STORAGE:-local-lvm}"
-CT_PASSWORD="${PW:-tacklebox}"
 CT_HOSTNAME="tacklebox"
+
+# Generate secure random container password
+CT_PASSWORD="$(openssl rand -base64 16)"
 
 variables
 color
@@ -33,6 +35,7 @@ catch_errors
 ### Create LXC ###
 msg_info "Creating LXC Container"
 CT_ID=$(pvesh get /cluster/nextid)
+
 pct create "$CT_ID" local:vztmpl/debian-12-standard_12.0-1_amd64.tar.zst \
   --hostname "$CT_HOSTNAME" \
   --memory "$CT_MEMORY" \
@@ -55,7 +58,7 @@ msg_ok "Container started"
 msg_info "Installing dependencies"
 pct exec "$CT_ID" -- bash -c "
 apt update &&
-apt install -y apache2 php php-sqlite3 unzip curl &&
+apt install -y apache2 php php-sqlite3 unzip curl openssl &&
 systemctl enable apache2
 "
 msg_ok "Dependencies installed"
@@ -68,16 +71,24 @@ curl -fsSL https://github.com/JoeCoooool/tacklebox/archive/refs/heads/main.zip -
 unzip /tmp/tacklebox.zip -d /tmp
 cp -r /tmp/tacklebox-main/* /var/www/html/
 chown -R www-data:www-data /var/www/html
-chmod -R 755 /var/www/html
+find /var/www/html -type d -exec chmod 755 {} \;
+find /var/www/html -type f -exec chmod 644 {} \;
 "
 msg_ok "TackleBox Pro installed"
 
 ### Restart Webserver ###
 pct exec "$CT_ID" -- systemctl restart apache2
 
-### Get IP ###
+### Get Container IP ###
 IP=$(pct exec "$CT_ID" -- hostname -I | awk '{print $1}')
 
 ### Finish ###
 msg_ok "Completed Successfully!"
-echo -e "\n${APP} is available at:\nhttp://${IP}\n"
+
+echo -e "\n${APP} is available at:"
+echo "http://${IP}"
+echo
+echo "Container credentials:"
+echo "Username: root"
+echo "Password: ${CT_PASSWORD}"
+echo
