@@ -1,5 +1,11 @@
-#!/bin/bash
-# TACKLEBOX ULTIMATE ONE-CLICK INSTALLER
+#!/usr/bin/env bash
+# Title: Proxmox Helper: TackleBox Pro Installer
+# Author: JoeCool <your.email@example.com>
+# License: MIT
+# Description: Creates an LXC container and automatically installs TackleBox Pro
+# Tested on: Proxmox VE 7/8
+# URL: https://github.com/JoeCoooool/tacklebox
+
 set -e
 
 # 1. Variablen (ID wird automatisch die nächste freie)
@@ -49,3 +55,4 @@ echo "✅ TACKLEBOX INSTALLATION ERFOLGREICH!"
 echo "---------------------------------------------------"
 echo "Öffne jetzt direkt: http://$IP"
 echo "---------------------------------------------------"
+
