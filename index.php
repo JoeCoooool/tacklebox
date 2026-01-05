@@ -1,6 +1,9 @@
 <?php
 /**
- * TACKLEBOX PRO 
+ * TACKLEBOX PRO - Filter Update (Excluding hardware from Grid but including in Stats)
+ * Plus: Clickable Detail Image for Fullscreen View
+ * Language Support for Setup & Login added.
+ */
 
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
