@@ -2,38 +2,53 @@
 
 ![TackleBox Main Screen](./screenshots/Screenshot1.png)
 
-TackleBox Pro ist ein leichtgewichtiges, webbasiertes Inventarsystem, das speziell für Angler entwickelt wurde, um ihre Köder, Ruten, Rollen und Zubehör effizient zu verwalten. Die App bietet eine schnelle Übersicht über den Bestand, den Gesamtwert der Ausrüstung und detaillierte Statistiken zu einzelnen Kategorien.
-✨ Kernfunktionen
 
-    Visuelles Inventar: Eine moderne Grid-Ansicht zeigt alle Tackle-Gegenstände mit Vorschaubildern.
 
-    Kategorie-Management: Automatische Filterung nach Hardbaits, Gummiködern, Ruten, Rollen und mehr.
 
-    Echtzeit-Statistiken: Sofortige Berechnung der Gesamtanzahl und des monetären Wertes der Ausrüstung – sowohl global als auch pro Kategorie.
+TackleBox Pro is a lightweight, web-based inventory system designed specifically for anglers to efficiently manage their lures, rods, reels, and accessories. The app provides a fast overview of your inventory, the total value of your gear, and detailed statistics for individual categories.
 
-    Smarte Suche: Schnelles Finden von Equipment durch eine Live-Suche nach Marke, Modell oder Zielfisch.
+✨ Key Features
 
-    Zielfisch-Tracking: Jedem Köder können spezifische Zielfische (z. B. Hecht, Zander, Barsch) zugeordnet werden.
+Visual Inventory
+A modern grid view displays all tackle items with image previews.
 
-    Detailansicht mit Lightbox: Klicke auf ein Bild, um es im Vollbildmodus zu betrachten.
+Category Management
+Automatic filtering for hardbaits, soft plastics, rods, reels, and more.
 
-    Vollständige Datenkontrolle: Integrierte Export- und Importfunktion (ZIP/SQLite), um Backups der Datenbank inklusive aller Bilder zu erstellen.
+Real-Time Statistics
+Instant calculation of total item count and monetary value — globally and per category.
 
-🛠 Technische Highlights
+Smart Search
+Quickly find equipment using live search by brand, model, or target fish.
 
-    Backend: PHP & SQLite (Keine komplexe Datenbank-Installation nötig).
+Target Fish Tracking
+Assign specific target fish (e.g. pike, zander, perch) to each lure.
 
-    Frontend: Modernes, responsives Design mit Dark Mode Unterstützung.
+Lightbox Detail View
+Click on any image to view it in full-screen mode.
 
-    Sicherheit: CSRF-Schutz, Session-Handling und Passwort-Hashing für den Admin-Bereich.
+Full Data Control
+Built-in export and import functionality (ZIP/SQLite) to create full database backups, including all images.
 
-    Performance: "Lazy Loading" (Infinite Scroll) sorgt dafür, dass die App auch bei hunderten von Einträgen extrem schnell bleibt.
+🛠 Technical Highlights
+
+Backend
+PHP & SQLite (no complex database setup required)
+
+Frontend
+Modern, responsive design with Dark Mode support
+
+Security
+CSRF protection, secure session handling, and password hashing for the admin area
+
+Performance
+Lazy loading (infinite scroll) keeps the app extremely fast, even with hundreds of entries
 
 🚀 Installation
 
-    Unter Proxmox den Code in der Console eingeben und Enter drücken 
+On your Proxmox system, paste the following command into the console and press Enter:
 
-    bash -c "$(curl -sL https://raw.githubusercontent.com/JoeCoooool/tacklebox/main/setup.sh | tr -d '\r')"
+bash -c "$(curl -sL https://raw.githubusercontent.com/JoeCoooool/tacklebox/main/setup.sh | tr -d '\r')"
 
 📸 Screenshots
 ![TackleBox Main Screen](./screenshots/Screenshot2.png)
