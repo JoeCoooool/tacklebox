@@ -29,6 +29,13 @@ Bilder lassen sich per Klick im Vollbild anzeigen
 💾 Daten-Export & Import
 Backup-Funktion (ZIP/SQLite) inklusive aller Bilder
 
+📱 QR-Codes
+
+Jede Box besitzt einen eigenen QR-Code.
+Der QR-Code enthält einen direkten Link zu dieser Box in der App.
+______________________________________________________________________________________________________
+
+
 🛠 Technischer Überblick
 Bereich	Technologie
 Backend	PHP, SQLite
@@ -86,3 +93,5 @@ Self-Hosting-Enthusiasten
 ![TackleBox Main Screen](./screenshots/Screenshot2.png)
 ![TackleBox Main Screen](./screenshots/Screenshot3.png)
 ![TackleBox Main Screen](./screenshots/Screenshot4.png)
+![TackleBox Main Screen](./screenshots/Screenshot6.png)
+![TackleBox Main Screen](./screenshots/Screenshot7.png)
