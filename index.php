@@ -280,7 +280,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['action']) || isset($
                 move_uploaded_file($_FILES['bild']['tmp_name'], "uploads/".$bild);
             }
         }
+        
         $fische = isset($_POST['zielfische']) ? implode(', ', $_POST['zielfische']) : '';
+        if ($lang === 'en' && isset($_POST['zielfische'])) {
+            $mapped = [];
+            foreach($_POST['zielfische'] as $f_en) {
+                $idx = array_search($f_en, $texts['en']['fish']);
+                if ($idx !== false) $mapped[] = $texts['de']['fish'][$idx];
+            }
+            $fische = implode(', ', $mapped);
+        }
+
         $v = [$_POST['name'], $_POST['hersteller'], $_POST['kategorie'], $_POST['farbe'], (float)$_POST['gewicht'], (float)$_POST['laenge'], (float)$_POST['preis'], (int)$_POST['menge'], $bild, $fische];
         if ($_POST['action'] == 'save') $db->prepare("INSERT INTO tackle (name, hersteller, kategorie, farbe, gewicht, laenge, preis, menge, bild, datum) VALUES (?,?,?,?,?,?,?,?,?,?)")->execute($v);
         else { $v[] = (int)$_POST['id']; $db->prepare("UPDATE tackle SET name=?, hersteller=?, kategorie=?, farbe=?, gewicht=?, laenge=?, preis=?, menge=?, bild=?, datum=? WHERE id=?")->execute($v); }
@@ -319,7 +329,6 @@ $stats = $db->query("SELECT SUM(menge) as n, SUM(preis*menge) as w FROM tackle")
         .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 25px; }
         .action-btns a, .action-btns button { margin: 0 !important; width: 100%; height: 50px; display: flex; align-items: center; justify-content: center; text-decoration: none; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; }
         
-        /* OPTIMIERTES MENÜ UNTEN */
         .kat-bar-wrapper { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: center; z-index: 100; }
         .kat-bar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; padding: 0 10px; max-width: 800px; }
         .kat-btn { background: var(--card); padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; border: 1px solid #334155; white-space: nowrap; cursor: pointer; margin-bottom: 4px; }
@@ -377,7 +386,15 @@ $stats = $db->query("SELECT SUM(menge) as n, SUM(preis*menge) as w FROM tackle")
                 </div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                     <div><label class="form-label"><?= $t['color'] ?></label><input type="text" name="farbe" value="<?= htmlspecialchars($item['farbe']??'') ?>"></div>
-                    <div><label class="form-label"><?= $t['category'] ?></label><select name="kategorie"><?php foreach($db_cats as $index => $db_name): ?><option value="<?= $db_name ?>" <?= ($item['kategorie']??'')==$db_name?'selected':'' ?>><?= $t['cats'][$index] ?></option><?php endforeach; ?></select></div>
+                    <div><label class="form-label"><?= $t['category'] ?></label>
+                        <select name="kategorie">
+                            <?php foreach($db_cats as $index => $db_name): ?>
+                                <option value="<?= $db_name ?>" <?= ($item['kategorie']??'')==$db_name?'selected':'' ?>>
+                                    <?= $t['cats'][$index] ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
                 <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
                     <div><label class="form-label"><?= $t['weight'] ?></label><input type="number" step="0.01" name="gewicht" id="f_g" value="<?= $item['gewicht']??'' ?>"></div>
@@ -389,11 +406,14 @@ $stats = $db->query("SELECT SUM(menge) as n, SUM(preis*menge) as w FROM tackle")
                     <label class="form-label"><?= $t['date'] ?></label>
                     <div class="fish-selector">
                         <?php 
-                        $selected_fish = isset($item['datum']) ? explode(', ', $item['datum']) : [];
-                        foreach($fish_list as $f): ?>
+                        $saved_fish_de = isset($item['datum']) ? explode(', ', $item['datum']) : [];
+                        foreach($texts['de']['fish'] as $idx => $f_de): 
+                            $f_display = $texts[$lang]['fish'][$idx];
+                            $is_checked = in_array($f_de, $saved_fish_de);
+                        ?>
                             <label class="fish-chip">
-                                <input type="checkbox" name="zielfische[]" value="<?= $f ?>" <?= in_array($f, $selected_fish)?'checked':'' ?>>
-                                <span><?= $f ?></span>
+                                <input type="checkbox" name="zielfische[]" value="<?= $f_display ?>" <?= $is_checked?'checked':'' ?>>
+                                <span><?= $f_display ?></span>
                             </label>
                         <?php endforeach; ?>
                     </div>
@@ -414,15 +434,31 @@ $stats = $db->query("SELECT SUM(menge) as n, SUM(preis*menge) as w FROM tackle")
                 <div class="mini-card"><label><?= $t['weight'] ?></label><b><?= (float)$item['gewicht'] ?> g</b></div>
                 <div class="mini-card"><label><?= $t['price'] ?></label><b><?= number_format($item['preis'],2) ?> €</b></div>
                 <div class="mini-card"><label><?= $t['qty'] ?></label><b><?= (int)$item['menge'] ?></b></div>
-                <div class="mini-card"><label><?= $t['category'] ?></label><b><?php $idx = array_search($item['kategorie'], $db_cats); echo $t['cats'][$idx !== false ? $idx : 0]; ?></b></div>
+                <div class="mini-card"><label><?= $t['category'] ?></label><b><?php 
+                    $idx = array_search($item['kategorie'], $texts['de']['cats']);
+                    echo htmlspecialchars($idx !== false ? $t['cats'][$idx] : $item['kategorie']); 
+                ?></b></div>
             </div>
-            <div class="mini-card" style="margin-top:10px; width:100%; box-sizing:border-box;"><label><?= $t['date'] ?></label><b style="color:var(--accent);"><?= htmlspecialchars($item['datum'] ?: '-') ?></b></div>
+            <div class="mini-card" style="margin-top:10px; width:100%; box-sizing:border-box;"><label><?= $t['date'] ?></label>
+            <b style="color:var(--accent);">
+                <?php 
+                if(!empty($item['datum'])) {
+                    $saved = explode(', ', $item['datum']);
+                    $translated = [];
+                    foreach($saved as $f_saved) {
+                        $idx = array_search($f_saved, $texts['de']['fish']);
+                        $translated[] = ($idx !== false) ? $texts[$lang]['fish'][$idx] : $f_saved;
+                    }
+                    echo htmlspecialchars(implode(', ', $translated));
+                } else { echo '-'; }
+                ?>
+            </b></div>
             <div class="action-btns"><a href="?id=<?= $item['id'] ?>&edit=1" style="background:var(--accent); color:#000;"><?= $t['edit'] ?></a><form method="POST" style="margin:0;"><input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>"><input type="hidden" name="delete_id" value="<?= $item['id'] ?>"><button type="submit" style="background:#f87171; color:#fff;" onclick="return confirm('<?= $t['confirm'] ?>')"><?= $t['delete'] ?></button></form></div>
         </div>
     <?php endif; ?>
 </div>
 <div class="kat-bar-wrapper" id="bottomNav" style="<?= ($item || $is_edit) ? 'display:none;' : '' ?>">
-    <div class="kat-bar"><div onclick="filterKat('all')" class="kat-btn active" id="btn-all"><?= $t['all'] ?></div><?php foreach($db_cats as $index => $db_name): ?><div onclick="filterKat('<?= $db_name ?>')" class="kat-btn" id="btn-<?= $db_name ?>"><?= $t['cats'][$index] ?></div><?php endforeach; ?></div>
+    <div class="kat-bar"><div onclick="filterKat('all')" class="kat-btn active" id="btn-all"><?= $t['all'] ?></div><?php foreach($db_cats as $index => $db_name): ?><div onclick="filterKat('<?= $db_name ?>')" class="kat-btn" id="btn-<?= str_replace(' ', '_', $db_name) ?>"><?= $t['cats'][$index] ?></div><?php endforeach; ?></div>
 </div>
 <script>
 function escapeHTML(str) { if(!str) return ''; return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
@@ -477,19 +513,27 @@ async function loadTackle(reset = false) {
 
 function filterKat(k) { 
     currentKat = k; 
-    document.querySelectorAll('.kat-btn').forEach(b => b.classList.remove('active'));
-    let activeBtn = document.getElementById('btn-' + k);
-    if(activeBtn) activeBtn.classList.add('active');
-    loadStats(k); loadTackle(true); 
+    document.querySelectorAll('.kat-btn').forEach(b => b.classList.remove('active')); 
+    const btnId = 'btn-' + k.replace(/ /g, '_');
+    if(document.getElementById(btnId)) document.getElementById(btnId).classList.add('active'); 
+    loadTackle(true); 
+    loadStats(k);
 }
-function doSearch() { currentSearch = document.getElementById('liveSearch').value; loadTackle(true); }
+
+function doSearch() { 
+    clearTimeout(window.searchTimer); 
+    window.searchTimer = setTimeout(() => { 
+        currentSearch = document.getElementById('liveSearch').value; 
+        loadTackle(true); 
+    }, 400); 
+}
+
 function setSort(s) { currentSort = s; loadTackle(true); }
 
 const observer = new IntersectionObserver(entries => { if (entries[0].isIntersecting) loadTackle(); }, { threshold: 0.1 });
 if (document.getElementById('sentinel')) observer.observe(document.getElementById('sentinel'));
 
-// Initial load
-if (document.getElementById('tackleGrid')) { loadTackle(); }
+if (document.getElementById('tackleGrid')) loadTackle();
 </script>
 </body>
 </html>
