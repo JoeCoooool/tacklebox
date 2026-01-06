@@ -276,7 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['restore_file'])) {
 if (isset($_GET['load_more'])) {
     header('Content-Type: application/json');
     $offset = (int)($_GET['offset'] ?? 0);
-    $kat = $_GET['filter_kat'] ?? 'all'; 
+    $kat = $_GET['filter_kat'] ?? null; 
     $search = $_GET['q'] ?? '';
     $sort = $_GET['sort'] ?? 'new';
     $box_id = (isset($_GET['box_id']) && $_GET['box_id'] !== '') ? (int)$_GET['box_id'] : null;
@@ -286,7 +286,17 @@ if (isset($_GET['load_more'])) {
     $params = [];
 
     if ($box_id !== null) { $query .= " AND box_id = ?"; $params[] = $box_id; }
-    if ($kat !== 'all' && $kat !== 'Boxen') { $query .= " AND kategorie = ?"; $params[] = $kat; }
+    if (is_array($kat) && count($kat)) {
+    $placeholders = implode(',', array_fill(0, count($kat), '?'));
+    $query .= " AND kategorie IN ($placeholders)";
+    foreach ($kat as $k) {
+        $params[] = $k;
+    }
+} elseif (is_string($kat)) {
+    $query .= " AND kategorie = ?";
+    $params[] = $kat;
+}
+
     if ($search !== '') {
         $query .= " AND (name LIKE ? OR hersteller LIKE ? OR farbe LIKE ? OR datum LIKE ?)";
         $params[] = $searchTerm; $params[] = $searchTerm; $params[] = $searchTerm; $params[] = $searchTerm;
@@ -893,6 +903,13 @@ $qrUrl =
 </div>
 
 <script>
+
+const BAIT_CATEGORIES = [
+    'Hardbaits',
+    'Gummiköder',
+    'Metallköder'
+];
+
 const TXT_REMOVE_BOX = "<?= $t['remove_box'] ?>";
 
     let offset = 0, loading = false, allLoaded = false, currentKat = 'all', searchQuery = '';
@@ -905,7 +922,18 @@ const TXT_REMOVE_BOX = "<?= $t['remove_box'] ?>";
         if (reset) { offset = 0; grid.innerHTML = ''; allLoaded = false; }
         
         const sort = document.getElementById('sortSelect')?.value || 'new';
-        let url = `?load_more=1&offset=${offset}&filter_kat=${currentKat}&q=${searchQuery}&sort=${sort}`;
+        let url = `?load_more=1&offset=${offset}&q=${searchQuery}&sort=${sort}`;
+
+if (currentKat === 'all') {
+    // 👉 "Alle" = NUR Köder
+    BAIT_CATEGORIES.forEach(k => {
+        url += `&filter_kat[]=${encodeURIComponent(k)}`;
+    });
+} else {
+    // 👉 Einzelne Kategorie (auch Ruten / Rollen / Zubehör)
+    url += `&filter_kat=${encodeURIComponent(currentKat)}`;
+}
+
         if (boxId) url += `&box_id=${boxId}`;
 
         const res = await fetch(url);
