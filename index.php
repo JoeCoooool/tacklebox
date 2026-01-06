@@ -229,6 +229,18 @@ if (isset($_GET['load_more'])) {
     echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC)); exit;
 }
 
+// --- REMOVE ITEM FROM BOX (nur Box-Zuordnung löschen) ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove_from_box'])) {
+    if (($_POST['csrf_token'] ?? '') !== $_SESSION['csrf_token']) die("CSRF mismatch");
+
+    $id = (int)$_POST['remove_from_box'];
+    $db->prepare("UPDATE tackle SET box_id = 0 WHERE id = ?")->execute([$id]);
+
+    header("Location: index.php?box_id=".(int)$_POST['current_box']);
+    exit;
+}
+
+
 // --- SAVE / EDIT / DELETE TACKLE ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['action']) || isset($_POST['delete_id']))) {
     if (($_POST['csrf_token'] ?? '') !== $_SESSION['csrf_token']) die("CSRF mismatch");
@@ -690,37 +702,70 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
         const items = await res.json();
         
         if (items.length < 16) allLoaded = true;
-        items.forEach(item => {
-            const div = document.createElement('a');
-            div.className = 'card';
-            div.href = `?id=${item.id}`;
-            
-            // Logik für bedingte Anzeige von Gewicht und Länge
-            let infoString = "";
-            let g = parseFloat(item.gewicht);
-            let l = parseFloat(item.laenge);
-            
-            if (g > 0 && l > 0) infoString = `${g}g | ${l}cm`;
-            else if (g > 0) infoString = `${g}g`;
-            else if (l > 0) infoString = `${l}cm`;
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.onclick = () => location.href = `?id=${item.id}`;
 
-            div.innerHTML = `
-                <div class="card-img">${item.bild ? `<img src="uploads/${item.bild}" loading="lazy">` : '📷'}</div>
-                <div class="card-info">
-                    <div style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.hersteller}</div>
-                    <div style="color:var(--label); font-size:0.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.name}</div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; font-size:0.75rem;">
-                        <div style="color:var(--label);">${infoString}</div>
-                        <div style="font-weight:bold; color:var(--accent); background:rgba(56,189,248,0.1); padding:2px 6px; border-radius:4px;">${item.menge}x</div>
-                    </div>
-                </div>
-            `;
-            grid.appendChild(div);
-        });
-        offset += 16;
-        loading = false;
-        document.getElementById('loader').style.display = allLoaded ? 'none' : 'block';
-    }
+    let g = parseFloat(item.gewicht);
+    let l = parseFloat(item.laenge);
+
+div.innerHTML = `
+    <div class="card-img">
+        ${item.bild ? `<img src="uploads/${item.bild}" loading="lazy">` : '📷'}
+    </div>
+
+    <div class="card-info">
+        <div style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+            ${item.hersteller}
+        </div>
+
+        <div style="color:var(--label); font-size:0.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+            ${item.name}
+        </div>
+
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+    <div style="font-size:0.7rem; color:var(--label);">
+        ${(() => {
+            let parts = [];
+            if (item.gewicht > 0) parts.push(item.gewicht + 'g');
+            if (item.laenge > 0) parts.push(item.laenge + 'cm');
+            return parts.join(' | ');
+        })()}
+    </div>
+
+    <div style="font-size:0.75rem; font-weight:bold;">
+        ${item.menge}x
+    </div>
+</div>
+
+
+            ${boxId ? `
+            <form method="POST" style="margin:0;" onclick="event.stopPropagation();">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+                <input type="hidden" name="remove_from_box" value="${item.id}">
+                <input type="hidden" name="current_box" value="${boxId}">
+                <button type="submit"
+                    style="background:#f87171;color:#fff;border:none;
+                           border-radius:6px;padding:4px 8px;
+                           font-size:0.65rem;cursor:pointer;">
+                    Aus Box
+                </button>
+            </form>
+            ` : ''}
+        </div>
+    </div>
+`;
+
+
+    grid.appendChild(div);
+});
+
+offset += 16;
+loading = false;
+document.getElementById('loader').style.display = allLoaded ? 'none' : 'block';
+}
 
     function filterKat(kat, btn) {
         currentKat = kat;
