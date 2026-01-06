@@ -39,7 +39,8 @@ Performance	Lazy Loading (Infinite Scroll)
 
 Keine externe Datenbank erforderlich – ideal für Self-Hosting.
 
-📸 Screenshots
+________________________________________________________________________________________________________
+
 ⚙️ Installation (Proxmox)
 
 Proxmox-Konsole öffnen
@@ -48,6 +49,7 @@ Folgenden Befehl einfügen und Enter drücken:
 
 bash -c "$(curl -sL https://raw.githubusercontent.com/JoeCoooool/tacklebox/main/setup.sh | tr -d '\r')"
 
+________________________________________________________________________________________________________
 
 Das Setup erledigt:
 
@@ -56,6 +58,8 @@ Installation aller Abhängigkeiten
 Einrichtung der SQLite-Datenbank
 
 Bereitstellung der Web-App
+
+________________________________________________________________________________________________________
 
 🔐 Sicherheit
 
@@ -66,6 +70,8 @@ CSRF-Token für Formulare
 Sichere Passwort-Hashing-Mechanismen
 
 Sauberes Session-Handling
+
+________________________________________________________________________________________________________
 
 🎯 Zielgruppe
 
