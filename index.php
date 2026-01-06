@@ -12,12 +12,8 @@ ini_set('session.use_only_cookies', 1);
 ini_set('session.cookie_samesite', 'Lax');
 session_start();
 
-$privatePath = dirname(__DIR__) . '/private';
-
-$configFile = $privatePath . '/config_auth.json';
-$dbFile     = $privatePath . '/tackle_app_db_9f2a.sqlite';
-
-
+$dbFile = 'tackle_app_db_9f2a.sqlite'; 
+$configFile = 'config_auth.json'; 
 
 // --- 1. SESSION TIMEOUT ---
 if (isset($_SESSION['logged_in'])) {
