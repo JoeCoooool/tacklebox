@@ -250,7 +250,25 @@ if (isset($_GET['load_more'])) {
     $params = [];
     if ($kat === 'all') { $query .= " AND kategorie NOT IN ('Angelruten', 'Rollen', 'Haken', 'Zubehör')"; } 
     else { $query .= " AND kategorie = ?"; $params[] = $kat; }
-    if ($search !== '') { $query .= " AND (name LIKE ? OR hersteller LIKE ? OR farbe LIKE ? OR datum LIKE ?)"; $term = "%$search%"; $params[]=$term;$params[]=$term;$params[]=$term;$params[]=$term; }
+    
+    if ($search !== '') { 
+        $query .= " AND (name LIKE ? OR hersteller LIKE ? OR farbe LIKE ? OR datum LIKE ?)"; 
+        $term = "%$search%"; 
+        
+        // --- ZWEISPRACHIGE SUCHE LOGIK ---
+        // Wenn auf Englisch gesucht wird, prüfen wir ob der Suchbegriff ein Fischname ist
+        // und fügen die deutsche Entsprechung hinzu, da Fische auf DE gespeichert werden.
+        $searchLower = strtolower($search);
+        foreach($texts['en']['fish'] as $idx => $f_en) {
+            if(strtolower($f_en) === $searchLower) {
+                $term = "%" . $texts['de']['fish'][$idx] . "%";
+                break;
+            }
+        }
+        
+        $params[]=$term;$params[]=$term;$params[]=$term;$params[]=$term; 
+    }
+    
     if ($sort === 'abc') { $query .= " ORDER BY hersteller ASC, name ASC LIMIT 16 OFFSET $offset"; }
     else { $query .= " ORDER BY id DESC LIMIT 16 OFFSET $offset"; }
     $stmt = $db->prepare($query); $stmt->execute($params);
@@ -495,15 +513,8 @@ async function loadTackle(reset = false) {
             const card = document.createElement('a');
             card.className = 'card';
             card.href = '?id=' + i.id;
-            card.innerHTML = `<div class="card-img">${i.bild ? `<img src="uploads/${i.bild}" loading="lazy">` : '🎣'}</div>
-                <div class="card-info">
-                    <div style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(i.hersteller)}</div>
-                    <div style="color:var(--label); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:0.75rem;">${escapeHTML(i.name)}</div>
-                    <div style="margin-top:4px; display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:var(--label); font-size:0.75rem;">${parseFloat(i.laenge)}cm / ${parseFloat(i.gewicht)}g</span>
-                        <span style="background:rgba(255,255,255,0.1); padding:1px 5px; border-radius:4px; font-size:0.7rem;">x${i.menge}</span>
-                    </div>
-                </div>`;
+            const img = i.bild ? `<img src="uploads/${i.bild}" loading="lazy">` : `<span style="font-size:2rem;">🎣</span>`;
+            card.innerHTML = `<div class="card-img">${img}</div><div class="card-info"><b>${escapeHTML(i.hersteller)}</b><br><span style="color:var(--label)">${escapeHTML(i.name)}</span><div style="margin-top:4px; font-weight:bold; color:var(--accent);">${i.menge}x | ${i.preis}€</div></div>`;
             grid.appendChild(card);
         });
         offset += 16;
@@ -511,29 +522,34 @@ async function loadTackle(reset = false) {
     loading = false;
 }
 
-function filterKat(k) { 
-    currentKat = k; 
-    document.querySelectorAll('.kat-btn').forEach(b => b.classList.remove('active')); 
-    const btnId = 'btn-' + k.replace(/ /g, '_');
-    if(document.getElementById(btnId)) document.getElementById(btnId).classList.add('active'); 
-    loadTackle(true); 
+function filterKat(k) {
+    currentKat = k;
+    document.querySelectorAll('.kat-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-' + k.replace(/ /g, '_')).classList.add('active');
     loadStats(k);
-}
-
-function doSearch() { 
-    clearTimeout(window.searchTimer); 
-    window.searchTimer = setTimeout(() => { 
-        currentSearch = document.getElementById('liveSearch').value; 
-        loadTackle(true); 
-    }, 400); 
+    loadTackle(true);
 }
 
 function setSort(s) { currentSort = s; loadTackle(true); }
 
-const observer = new IntersectionObserver(entries => { if (entries[0].isIntersecting) loadTackle(); }, { threshold: 0.1 });
-if (document.getElementById('sentinel')) observer.observe(document.getElementById('sentinel'));
+let searchTimer;
+function doSearch() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+        currentSearch = document.getElementById('liveSearch').value;
+        loadTackle(true);
+    }, 300);
+}
 
-if (document.getElementById('tackleGrid')) loadTackle();
+const observer = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting && !loading && !allLoaded) loadTackle();
+}, { threshold: 0.1 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadTackle();
+    const sentinel = document.getElementById('sentinel');
+    if(sentinel) observer.observe(sentinel);
+});
 </script>
 </body>
 </html>
