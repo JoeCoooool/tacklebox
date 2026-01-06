@@ -29,6 +29,10 @@ Images can be viewed in full-screen mode with a single click
 💾 Data Export & Import
 Backup functionality (ZIP/SQLite) including all images
 
+📱 QR Codes
+
+Each box has its own QR code.
+The QR code contains a direct link to the box in the app.
 ______________________________________________________________________________________________________
 
 🛠 Technical Overview
