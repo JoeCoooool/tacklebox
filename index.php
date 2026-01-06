@@ -255,14 +255,14 @@ if (isset($_GET['load_more'])) {
         $query .= " AND (name LIKE ? OR hersteller LIKE ? OR farbe LIKE ? OR datum LIKE ?)"; 
         $term = "%$search%"; 
         
-        // --- ZWEISPRACHIGE SUCHE LOGIK ---
-        // Wenn auf Englisch gesucht wird, prüfen wir ob der Suchbegriff ein Fischname ist
-        // und fügen die deutsche Entsprechung hinzu, da Fische auf DE gespeichert werden.
+        // --- VERBESSERTE ZWEISPRACHIGE SUCHE ---
         $searchLower = strtolower($search);
-        foreach($texts['en']['fish'] as $idx => $f_en) {
-            if(strtolower($f_en) === $searchLower) {
-                $term = "%" . $texts['de']['fish'][$idx] . "%";
-                break;
+        if ($lang === 'en' && strlen($searchLower) >= 2) {
+            foreach($texts['en']['fish'] as $idx => $f_en) {
+                if(str_contains(strtolower($f_en), $searchLower)) {
+                    $term = "%" . $texts['de']['fish'][$idx] . "%";
+                    break;
+                }
             }
         }
         
