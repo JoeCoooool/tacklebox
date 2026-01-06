@@ -124,8 +124,9 @@ $texts = [
         'new_sort'=>'✨ Neu',
         'view_grid' => 'Kachelansicht',
         'view_list' => 'Listenansicht',
-'box' => 'Box',
-'no_box' => 'Keine Box',
+        'box' => 'Box',
+        'no_box' => 'Keine Box',
+        'print_qr' => 'QR-Code drucken',
          'box_contents' => 'Inhalt dieser Box',
 
 
@@ -177,6 +178,8 @@ $texts = [
     'fish' => ["Pike", "Zander", "Perch", "Trout", "Catfish", "Eel", "Chub", "Asp", "Carp", "Tench", "Bream", "Roach", "Sea Trout", "Cod"],
 'box' => 'Box',
 'no_box' => 'No box',
+'print_qr' => 'Print QR code',
+
     // 👉 NEU
     'manage_boxes' => 'Manage Boxes',
     'new_box_name' => 'Name for new box...',
@@ -610,7 +613,9 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
                         <button type="submit" style="background:var(--accent); border:none; padding:8px 12px; border-radius:6px; font-weight:normal; cursor:pointer;">OK</button>
                     </form>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-                        <a href="?box_id=<?= $b['id'] ?>" style="color:var(--label); font-size:0.8rem; text-decoration:none;"><?= $t['qr_content'] ?>
+<a href="?box_id=<?= $b['id'] ?>&lang=<?= $lang ?>"
+   style="color:var(--label); font-size:0.8rem; text-decoration:none;">
+    <?= $t['qr_content'] ?>
 </a>
 <form method="POST"
       onsubmit="return confirm('<?= $t['confirm'] ?>')"
@@ -680,20 +685,25 @@ $qrUrl =
     </div>
 
     <!-- ✅ DRUCKEN BUTTON -->
-    <button class="no-print"
-        onclick="window.print()"
-        style="
-            margin-bottom:30px;
-            padding:8px 16px;
-            border-radius:8px;
-            border:none;
-            cursor:pointer;
-            background:var(--accent);
-            color:#000;
-            font-weight:700;
-        ">
-        🖨️ QR-Code drucken
-    </button>
+<button
+    class="no-print"
+    onclick="window.print()"
+    style="
+        display:inline-block;
+        margin-bottom:30px;
+        padding:8px 16px;
+        border-radius:8px;
+        background:var(--accent);
+        color:#000;
+        font-weight:700;
+        cursor:pointer;
+        border:none;
+    "
+>
+    🖨️ <?= $t['print_qr'] ?>
+</button>
+
+
 
     <!-- ✅ AB HIER BOX-INHALT -->
     <h3><?= $t['box_contents'] ?></h3>
@@ -733,12 +743,18 @@ $qrUrl =
             <a href="?id=<?= $item['id'] ?>&edit=1" style="background:#334155; color:#fff;"><?= $t['edit'] ?></a>
 <form method="POST" onsubmit="return confirm('<?= $t['confirm'] ?>')" style="margin:0;">
     <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-    <input type="hidden" name="box_id" value="<?= $b['id'] ?>">
-    <input type="hidden" name="box_action" value="delete">
+    <input type="hidden" name="delete_id" value="<?= $item['id'] ?>">
+
     <button type="submit"
-        style="background:none; border:none; color:#f87171;
-               font-size:0.8rem; cursor:pointer; text-decoration:underline;">
-        <?= $t['delete_box'] ?>
+        style="
+            background:#f87171;
+            color:#fff;
+            border:none;
+            border-radius:8px;
+            font-weight:bold;
+            cursor:pointer;
+        ">
+        <?= $t['delete'] ?>
     </button>
 </form>
 
