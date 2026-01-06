@@ -608,7 +608,53 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
             <a href="?manage_boxes=1" style="display:block; margin-bottom:20px; color:var(--accent); text-decoration:none; font-weight:normal;"><?= $t['back'] ?></a>
             <h2>📦 <?= htmlspecialchars($box_item['name']) ?></h2>
             <div style="background:#fff; padding:15px; border-radius:12px; display:inline-block;">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=<?= urlencode((isset($_SERVER['HTTPS'])?'https':'http')."://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?box_id=".$box_item['id']) ?>" alt="QR">
+<?php
+$qrUrl =
+    (isset($_SERVER['HTTPS']) ? 'https' : 'http')
+    . '://' . $_SERVER['HTTP_HOST']
+    . $_SERVER['PHP_SELF']
+    . '?box_id=' . $box_item['id'];
+?> 
+<div style="
+    background:#fff;
+    padding:15px;
+    border-radius:12px;
+    display:inline-flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+">
+
+    <!-- BOX NAME OBEN -->
+    <div style="
+        font-size:1.2rem;
+        font-weight:700;
+        color:#0f172a;
+        text-align:center;
+        max-width:200px;
+        word-break:break-word;
+    ">
+        <?= htmlspecialchars($box_item['name']) ?>
+    </div>
+
+    <!-- QR CODE -->
+    <img
+        src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=<?= urlencode($qrUrl) ?>"
+        alt="QR"
+    >
+
+    <!-- BRAND UNTEN -->
+    <div style="
+        font-weight:500;
+        letter-spacing:2px;
+        color:#0f172a;
+    ">
+        Tacklebox
+    </div>
+
+</div>
+
+
             </div>
             <h3 style="margin-top:30px;"><?= $t['box_contents'] ?></h3>
             <div class="grid <?= $view_mode == 'list' ? 'list-view' : '' ?>" id="tackleGrid"></div>
