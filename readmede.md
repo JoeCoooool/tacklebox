@@ -1,6 +1,6 @@
 🎣 TackleBox Pro
 
-![TackleBox Main Screen](./screenshots/Screenshot1.png)
+![TackleBox Main Screen](./screenshots/Screenshot5.png)
 
 
 TackleBox Pro ist ein leichtgewichtiges, webbasiertes Inventarsystem für Angler.
