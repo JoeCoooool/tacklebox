@@ -94,29 +94,97 @@ $view_mode = $_SESSION['view_mode'] ?? 'grid';
 
 $texts = [
     'de' => [
-        'title'=>'TackleBox', 'search'=>'Suche...', 'stats_n'=>'Menge', 'stats_w'=>'Wert', 
-        'add'=>'Neu hinzufügen', 'brand'=>'Marke', 'model'=>'Modell', 'color'=>'Farbe', 
-        'save'=>'Speichern', 'weight'=>'Gewicht (gramm)', 'length'=>'Länge (cm)', 'qty'=>'Stück', 
-        'price'=>'Preis (€)', 'lang_btn'=>'DE / EN', 'theme_btn'=>'Dunkel / Hell', 'logout'=>'Abmelden', 
-        'backup'=>'Daten Export', 'restore'=>'Daten Import', 'category'=>'Kategorie', 'date'=>'Zielfische', 
-        'image'=>'Bild', 'back'=>'← Zurück', 'edit'=>'Bearbeiten', 'delete'=>'Löschen',
-        'confirm'=>'Wirklich löschen?', 'all'=>'Alle', 'abc_sort'=>'🔤 A-Z', 'new_sort'=>'✨ Neu',
-        'view_grid' => 'Kachelansicht', 'view_list' => 'Listenansicht',
+        'title'=>'TackleBox',
+        'search'=>'Suche...',
+        'stats_n'=>'Menge',
+        'stats_w'=>'Wert',
+        'add'=>'Neu hinzufügen',
+        'brand'=>'Marke',
+        'model'=>'Modell',
+        'color'=>'Farbe',
+        'save'=>'Speichern',
+        'weight'=>'Gewicht (gramm)',
+        'length'=>'Länge (cm)',
+        'qty'=>'Stück',
+        'price'=>'Preis (€)',
+        'lang_btn'=>'DE / EN',
+        'theme_btn'=>'Dunkel / Hell',
+        'logout'=>'Abmelden',
+        'backup'=>'Daten Export',
+        'restore'=>'Daten Import',
+        'category'=>'Kategorie',
+        'date'=>'Zielfische',
+        'image'=>'Bild',
+        'back'=>'← Zurück',
+        'edit'=>'Bearbeiten',
+        'delete'=>'Löschen',
+        'confirm'=>'Wirklich löschen?',
+        'all'=>'Alle',
+        'abc_sort'=>'🔤 A-Z',
+        'new_sort'=>'✨ Neu',
+        'view_grid' => 'Kachelansicht',
+        'view_list' => 'Listenansicht',
+'box' => 'Box',
+'no_box' => 'Keine Box',
+         'box_contents' => 'Inhalt dieser Box',
+
+
+
         'cats' => ["Hardbaits", "Gummiköder", "Metallköder", "Angelruten", "Rollen", "Haken", "Zubehör"],
-        'fish' => ["Hecht", "Zander", "Barsch", "Forelle", "Wels", "Aal", "Döbel", "Rapfen", "Karpfen", "Schleie", "Brasse", "Rotauge", "Meerforelle", "Dorsch"]
+        'fish' => ["Hecht", "Zander", "Barsch", "Forelle", "Wels", "Aal", "Döbel", "Rapfen", "Karpfen", "Schleie", "Brasse", "Rotauge", "Meerforelle", "Dorsch"],
+
+        // 👉 NEU
+        'manage_boxes' => 'Boxen verwalten',
+        'new_box_name' => 'Name für neue Box...',
+        'create'       => 'Erstellen',
+        'qr_content'   => 'QR-Code & Inhalt',
+        'delete_box'   => 'Löschen',
+        'remove_box'   => 'Aus Box',
     ],
     'en' => [
-        'title'=>'TackleBox', 'search'=>'Search...', 'stats_n'=>'Qty', 'stats_w'=>'Value', 
-        'add'=>'Add New', 'brand'=>'Brand', 'model'=>'Model', 'color'=>'Color', 
-        'save'=>'Save', 'weight'=>'Weight (gram)', 'length'=>'Length (cm)', 'qty'=>'Quantity', 
-        'price'=>'Price (€)', 'lang_btn'=>'DE / EN', 'theme_btn'=>'Dark / Light', 'logout'=>'Logout', 
-        'backup'=>'Export Data', 'restore'=>'Import Data', 'category'=>'Category', 'date'=>'Target Fish', 
-        'image'=>'Image', 'back'=>'← Back', 'edit'=>'Edit', 'delete'=>'Delete',
-        'confirm'=>'Really delete?', 'all'=>'All', 'abc_sort'=>'🔤 A-Z', 'new_sort'=>'✨ New',
-        'view_grid' => 'Grid View', 'view_list' => 'List View',
-        'cats' => ["Hardbaits", "Softbaits", "Metal Baits", "Rods", "Reels", "Hooks", "Accessories"],
-        'fish' => ["Pike", "Zander", "Perch", "Trout", "Catfish", "Eel", "Chub", "Asp", "Carp", "Tench", "Bream", "Roach", "Sea Trout", "Cod"]
-    ]
+    'title'=>'TackleBox',
+    'search'=>'Search...',
+    'stats_n'=>'Qty',
+    'stats_w'=>'Value',
+    'add'=>'Add New',
+    'brand'=>'Brand',
+    'model'=>'Model',
+    'color'=>'Color',
+    'save'=>'Save',
+    'weight'=>'Weight (gram)',
+    'length'=>'Length (cm)',
+    'qty'=>'Quantity',
+    'price'=>'Price (€)',
+    'lang_btn'=>'DE / EN',
+    'theme_btn'=>'Dark / Light',
+    'logout'=>'Logout',
+    'backup'=>'Export Data',
+    'restore'=>'Import Data',
+    'category'=>'Category',
+    'date'=>'Target Fish',
+    'image'=>'Image',
+    'back'=>'← Back',
+    'edit'=>'Edit',
+    'delete'=>'Delete',
+    'confirm'=>'Really delete?',
+    'all'=>'All',
+    'abc_sort'=>'🔤 A-Z',
+    'new_sort'=>'✨ New',
+    'view_grid' => 'Grid View',
+    'view_list' => 'List View',      
+    'box_contents' => 'Contents of this box',
+    'cats' => ["Hardbaits", "Softbaits", "Metal Baits", "Rods", "Reels", "Hooks", "Accessories"],
+    'fish' => ["Pike", "Zander", "Perch", "Trout", "Catfish", "Eel", "Chub", "Asp", "Carp", "Tench", "Bream", "Roach", "Sea Trout", "Cod"],
+'box' => 'Box',
+'no_box' => 'No box',
+    // 👉 NEU
+    'manage_boxes' => 'Manage Boxes',
+    'new_box_name' => 'Name for new box...',
+    'create'       => 'Create',
+    'qr_content'   => 'QR code & contents',
+    'delete_box'   => 'Delete',
+    'remove_box'   => 'Remove',
+],
 ];
 $t = $texts[$lang];
 $db_cats = $texts['de']['cats'];
@@ -482,14 +550,20 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
         <div style="text-align:center;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <a href="index.php" style="color:var(--accent); text-decoration:none; font-weight:normal;"><?= $t['back'] ?></a>
-                <h2 style="margin:0;">📦 Boxen verwalten</h2><div style="width:40px;"></div>
+                <h2 style="margin:0;">📦 <?= $t['manage_boxes'] ?></h2><div style="width:40px;"></div>
             </div>
             <div style="background:var(--card); padding:15px; border-radius:12px; margin-bottom:25px; border: 2px dashed #334155;">
                 <form method="POST" style="display:flex; gap:10px;">
                     <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                     <input type="hidden" name="box_action" value="new">
-                    <input type="text" name="box_name" placeholder="Name für neue Box..." required>
-                    <button type="submit" style="background:var(--accent); border:none; padding:10px 15px; border-radius:8px; font-weight:normal; cursor:pointer; color:#000;">Erstellen</button>
+                    <input type="text" name="box_name" placeholder="<?= $t['new_box_name'] ?>" required>
+
+                    <button type="submit"
+    style="background:var(--accent); border:none; padding:10px 15px;
+           border-radius:8px; font-weight:normal; cursor:pointer; color:#000;">
+    <?= $t['create'] ?>
+</button>
+
                 </form>
             </div>
             <?php foreach($boxes as $b): ?>
@@ -502,13 +576,28 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
                         <button type="submit" style="background:var(--accent); border:none; padding:8px 12px; border-radius:6px; font-weight:normal; cursor:pointer;">OK</button>
                     </form>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-                        <a href="?box_id=<?= $b['id'] ?>" style="color:var(--label); font-size:0.8rem; text-decoration:none;">QR-Code & Inhalt</a>
-                        <form method="POST" onsubmit="return confirm('Box wirklich löschen?')" style="margin:0;">
-                            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-                            <input type="hidden" name="box_id" value="<?= $b['id'] ?>">
-                            <input type="hidden" name="box_action" value="delete">
-                            <button type="submit" style="background:none; border:none; color:#f87171; font-size:0.8rem; cursor:pointer; text-decoration:underline;">Löschen</button>
-                        </form>
+                        <a href="?box_id=<?= $b['id'] ?>" style="color:var(--label); font-size:0.8rem; text-decoration:none;"><?= $t['qr_content'] ?>
+</a>
+<form method="POST"
+      onsubmit="return confirm('<?= $t['confirm'] ?>')"
+      style="margin:0;">
+    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+    <input type="hidden" name="box_id" value="<?= $b['id'] ?>">
+    <input type="hidden" name="box_action" value="delete">
+
+    <button type="submit"
+        style="background:none;
+               border:none;
+               color:#f87171;
+               font-size:0.8rem;
+               cursor:pointer;
+               text-decoration:underline;">
+        <?= $t['delete_box'] ?>
+    </button>
+</form>
+
+
+
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -521,7 +610,7 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
             <div style="background:#fff; padding:15px; border-radius:12px; display:inline-block;">
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=<?= urlencode((isset($_SERVER['HTTPS'])?'https':'http')."://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?box_id=".$box_item['id']) ?>" alt="QR">
             </div>
-            <h3 style="margin-top:30px;">Inhalt dieser Box:</h3>
+            <h3 style="margin-top:30px;"><?= $t['box_contents'] ?></h3>
             <div class="grid <?= $view_mode == 'list' ? 'list-view' : '' ?>" id="tackleGrid"></div>
 
     <?php elseif ($detail_id && $item && !$is_edit): ?>
@@ -547,12 +636,17 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
         </div>
         <div class="action-btns">
             <a href="?id=<?= $item['id'] ?>&edit=1" style="background:#334155; color:#fff;"><?= $t['edit'] ?></a>
-            <form method="POST" onsubmit="return confirm('<?= $t['confirm'] ?>')" style="margin:0;">
-                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-                <input type="hidden" name="delete_id" value="<?= $item['id'] ?>">
-                <button type="submit" style="background:#f87171; color:#fff;"><?= $t['delete'] ?></button>
-            </form>
-        </div>
+<form method="POST" onsubmit="return confirm('<?= $t['confirm'] ?>')" style="margin:0;">
+    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+    <input type="hidden" name="box_id" value="<?= $b['id'] ?>">
+    <input type="hidden" name="box_action" value="delete">
+    <button type="submit"
+        style="background:none; border:none; color:#f87171;
+               font-size:0.8rem; cursor:pointer; text-decoration:underline;">
+        <?= $t['delete_box'] ?>
+    </button>
+</form>
+
 
     <?php elseif ($is_edit || isset($_GET['add'])): 
         $curr = $item ?? ['id'=>'','name'=>'','hersteller'=>'','kategorie'=>'','farbe'=>'','gewicht'=>'','laenge'=>'','preis'=>'','menge'=>1,'bild'=>'','datum'=>'','box_id'=>0];
@@ -639,7 +733,10 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
             <h1 class="app-title">TACKLEBOX</h1>
             <div style="display:flex; gap:8px; align-items:center; position:relative;">
                 <input type="text" id="searchInput" class="top-search" placeholder="<?= $t['search'] ?>">
-                <a href="?manage_boxes=1" class="top-btn" style="text-decoration:none;">📦 Boxen</a>
+                <a href="?manage_boxes=1" class="top-btn" style="text-decoration:none;">
+    📦 <?= $t['manage_boxes'] ?>
+</a>
+
                 <select id="sortSelect" class="top-sort">
                     <option value="new"><?= $t['new_sort'] ?></option>
                     <option value="abc"><?= $t['abc_sort'] ?></option>
@@ -685,6 +782,8 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
 </div>
 
 <script>
+const TXT_REMOVE_BOX = "<?= $t['remove_box'] ?>";
+
     let offset = 0, loading = false, allLoaded = false, currentKat = 'all', searchQuery = '';
     const grid = document.getElementById('tackleGrid');
     const boxId = <?= $is_box_view ? (int)$_GET['box_id'] : 'null' ?>;
@@ -746,12 +845,12 @@ div.innerHTML = `
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                 <input type="hidden" name="remove_from_box" value="${item.id}">
                 <input type="hidden" name="current_box" value="${boxId}">
-                <button type="submit"
-                    style="background:#f87171;color:#fff;border:none;
-                           border-radius:6px;padding:4px 8px;
-                           font-size:0.65rem;cursor:pointer;">
-                    Aus Box
-                </button>
+<button type="submit"
+    style="background:#f87171;color:#fff;border:none;
+           border-radius:6px;padding:4px 8px;
+           font-size:0.65rem;cursor:pointer;">
+    ${TXT_REMOVE_BOX}
+</button>
             </form>
             ` : ''}
         </div>
