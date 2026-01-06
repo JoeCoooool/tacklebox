@@ -540,6 +540,40 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
 }
 
 
+@media print {
+
+    /* 1️⃣ ALLES AUSBLENDEN */
+    body * {
+        visibility: hidden !important;
+    }
+
+    /* 2️⃣ NUR DAS QR-LABEL SICHTBAR */
+    .print-label,
+    .print-label * {
+        visibility: visible !important;
+    }
+
+    /* 3️⃣ QR-LABEL POSITIONIEREN */
+    .print-label {
+        position: absolute;
+        top: 20mm;
+        left: 50%;
+        transform: translateX(-50%);
+
+        border: 1px solid #000;
+        padding: 10px;
+        width: 6cm;
+        text-align: center;
+        background: #fff;
+    }
+
+    /* 4️⃣ BUTTONS NIE DRUCKEN */
+    .no-print {
+        display: none !important;
+    }
+}
+
+
     </style>
 </head>
 <body class="<?= $theme ?>">
@@ -603,61 +637,76 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
             <?php endforeach; ?>
         </div>
 
-    <?php elseif ($is_box_view && $box_item): ?>
-        <div style="text-align:center;">
-            <a href="?manage_boxes=1" style="display:block; margin-bottom:20px; color:var(--accent); text-decoration:none; font-weight:normal;"><?= $t['back'] ?></a>
-            <h2>📦 <?= htmlspecialchars($box_item['name']) ?></h2>
-            <div style="background:#fff; padding:15px; border-radius:12px; display:inline-block;">
+   <?php elseif ($is_box_view && $box_item): ?>
+<div style="text-align:center;">
+
+    <a href="?manage_boxes=1"
+       style="display:block; margin-bottom:20px; color:var(--accent); text-decoration:none;">
+        <?= $t['back'] ?>
+    </a>
+
+    <h2>📦 <?= htmlspecialchars($box_item['name']) ?></h2>
+
 <?php
 $qrUrl =
     (isset($_SERVER['HTTPS']) ? 'https' : 'http')
     . '://' . $_SERVER['HTTP_HOST']
     . $_SERVER['PHP_SELF']
     . '?box_id=' . $box_item['id'];
-?> 
-<div style="
-    background:#fff;
-    padding:15px;
-    border-radius:12px;
-    display:inline-flex;
-    flex-direction:column;
-    align-items:center;
-    gap:6px;
-">
+?>
 
-    <!-- BOX NAME OBEN -->
-    <div style="
-        font-size:1.2rem;
-        font-weight:700;
-        color:#0f172a;
-        text-align:center;
-        max-width:200px;
-        word-break:break-word;
+    <!-- ✅ QR-BLOCK (NUR QR!) -->
+    <div class="print-label" style="
+        background:#fff;
+        border-radius:12px;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        gap:6px;
+        margin-bottom:20px;
     ">
-        <?= htmlspecialchars($box_item['name']) ?>
+        <div style="font-size:1.2rem;font-weight:700;color:#0f172a;">
+            <?= htmlspecialchars($box_item['name']) ?>
+        </div>
+
+        <img
+            src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=<?= urlencode($qrUrl) ?>"
+            alt="QR"
+        >
+
+        <div style="font-weight:500;letter-spacing:2px;color:#0f172a;">
+            Tacklebox
+        </div>
     </div>
 
-    <!-- QR CODE -->
-    <img
-        src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=<?= urlencode($qrUrl) ?>"
-        alt="QR"
-    >
+    <!-- ✅ DRUCKEN BUTTON -->
+    <button class="no-print"
+        onclick="window.print()"
+        style="
+            margin-bottom:30px;
+            padding:8px 16px;
+            border-radius:8px;
+            border:none;
+            cursor:pointer;
+            background:var(--accent);
+            color:#000;
+            font-weight:700;
+        ">
+        🖨️ QR-Code drucken
+    </button>
 
-    <!-- BRAND UNTEN -->
-    <div style="
-        font-weight:500;
-        letter-spacing:2px;
-        color:#0f172a;
-    ">
-        Tacklebox
+    <!-- ✅ AB HIER BOX-INHALT -->
+    <h3><?= $t['box_contents'] ?></h3>
+
+    <div class="grid <?= $view_mode == 'list' ? 'list-view' : '' ?>"
+         id="tackleGrid"
+         style="margin-top:15px;">
     </div>
 
 </div>
 
 
-            </div>
-            <h3 style="margin-top:30px;"><?= $t['box_contents'] ?></h3>
-            <div class="grid <?= $view_mode == 'list' ? 'list-view' : '' ?>" id="tackleGrid"></div>
+
 
     <?php elseif ($detail_id && $item && !$is_edit): ?>
         <a href="index.php" style="color:var(--accent); text-decoration:none; font-weight:bold; display:block; margin-bottom:15px;"><?= $t['back'] ?></a>
