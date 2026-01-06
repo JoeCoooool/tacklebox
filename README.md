@@ -4,52 +4,85 @@
 
 
 
+TackleBox Pro is a lightweight, web-based inventory system for anglers. It helps manage lures, rods, reels, and accessories in a clear and structured way, providing a fast overview of your inventory, total gear value, and detailed statistics at all times.
 
-TackleBox Pro is a lightweight, web-based inventory system designed specifically for anglers to efficiently manage their lures, rods, reels, and accessories. The app provides a fast overview of your inventory, the total value of your gear, and detailed statistics for individual categories.
+🚀 Features
 
-✨ Key Features
+📦 Visual Inventory
+Modern grid-based layout with image previews of all tackle items
 
-Visual Inventory
-A modern grid view displays all tackle items with image previews.
+🗂 Category Management
+Automatic filtering for hardbaits, soft plastics, rods, reels, and more
 
-Category Management
-Automatic filtering for hardbaits, soft plastics, rods, reels, and more.
+📊 Real-Time Statistics
+Display of total item count and total value — globally and per category
 
-Real-Time Statistics
-Instant calculation of total item count and monetary value — globally and per category.
+🔍 Smart Search
+Live search by brand, model, or target fish
 
-Smart Search
-Quickly find equipment using live search by brand, model, or target fish.
+🐟 Target Fish Tracking
+Lures can be assigned to specific target fish (e.g. pike, zander, perch)
 
-Target Fish Tracking
-Assign specific target fish (e.g. pike, zander, perch) to each lure.
+🖼 Lightbox Detail View
+Images can be viewed in full-screen mode with a single click
 
-Lightbox Detail View
-Click on any image to view it in full-screen mode.
+💾 Data Export & Import
+Backup functionality (ZIP/SQLite) including all images
 
-Full Data Control
-Built-in export and import functionality (ZIP/SQLite) to create full database backups, including all images.
+______________________________________________________________________________________________________
 
-🛠 Technical Highlights
+🛠 Technical Overview
 
-Backend
-PHP & SQLite (no complex database setup required)
+Area | Technology
+Backend | PHP, SQLite
+Frontend | HTML, CSS, JavaScript
+Design | Responsive, Dark Mode
+Security | CSRF protection, sessions, password hashing
+Performance | Lazy loading (infinite scroll)
 
-Frontend
-Modern, responsive design with Dark Mode support
+No external database required — ideal for self-hosting.
+______________________________________________________________________________________________________
+⚙️ Installation (Proxmox)
 
-Security
-CSRF protection, secure session handling, and password hashing for the admin area
+Open the Proxmox console
 
-Performance
-Lazy loading (infinite scroll) keeps the app extremely fast, even with hundreds of entries
-
-🚀 Installation
-
-On your Proxmox system, paste the following command into the console and press Enter:
+Paste the following command and press Enter:
 
 bash -c "$(curl -sL https://raw.githubusercontent.com/JoeCoooool/tacklebox/main/setup.sh | tr -d '\r')"
 
+______________________________________________________________________________________________________
+
+The setup will handle:
+
+Installation of all dependencies
+
+Setup of the SQLite database
+
+Deployment of the web application
+
+______________________________________________________________________________________________________
+
+🔐 Security
+
+Protected admin area
+
+CSRF tokens for all forms
+
+Secure password hashing mechanisms
+
+Clean and reliable session handling
+
+______________________________________________________________________________________________________
+
+🎯 Target Audience
+
+Hobby and professional anglers
+
+Tackle collectors
+
+Anglers with large lure and gear inventories
+
+Self-hosting enthusiasts
 📸 Screenshots
 ![TackleBox Main Screen](./screenshots/Screenshot2.png)
 ![TackleBox Main Screen](./screenshots/Screenshot3.png)
