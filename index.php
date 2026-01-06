@@ -255,7 +255,6 @@ if (isset($_GET['load_more'])) {
         $query .= " AND (name LIKE ? OR hersteller LIKE ? OR farbe LIKE ? OR datum LIKE ?)"; 
         $term = "%$search%"; 
         
-        // --- VERBESSERTE ZWEISPRACHIGE SUCHE ---
         $searchLower = strtolower($search);
         if ($lang === 'en' && strlen($searchLower) >= 2) {
             foreach($texts['en']['fish'] as $idx => $f_en) {
@@ -514,7 +513,8 @@ async function loadTackle(reset = false) {
             card.className = 'card';
             card.href = '?id=' + i.id;
             const img = i.bild ? `<img src="uploads/${i.bild}" loading="lazy">` : `<span style="font-size:2rem;">🎣</span>`;
-            card.innerHTML = `<div class="card-img">${img}</div><div class="card-info"><b>${escapeHTML(i.hersteller)}</b><br><span style="color:var(--label)">${escapeHTML(i.name)}</span><div style="margin-top:4px; font-weight:bold; color:var(--accent);">${i.menge}x | ${i.preis}€</div></div>`;
+            // --- GEÄNDERT: GEWICHT, LÄNGE, STÜCKZAHL STATT PREIS ---
+            card.innerHTML = `<div class="card-img">${img}</div><div class="card-info"><b>${escapeHTML(i.hersteller)}</b><br><span style="color:var(--label)">${escapeHTML(i.name)}</span><div style="margin-top:4px; font-weight:bold; color:var(--accent); font-size:0.75rem;">${i.gewicht}g | ${i.laenge}cm | ${i.menge}stk</div></div>`;
             grid.appendChild(card);
         });
         offset += 16;
