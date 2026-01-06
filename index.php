@@ -81,13 +81,7 @@ header("X-Frame-Options: DENY");
 
 if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
-function is_safe_url($url) {
-    $p = parse_url($url);
-    if (!$p || !in_array($p['scheme'], ['http', 'https'])) return false;
-    $ip = gethostbyname($p['host'] ?? '');
-    if (!$ip || filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) return false;
-    return $url;
-}
+
 
 $lang = $_SESSION['lang'] ?? 'de';
 if (isset($_GET['lang'])) { $lang = $_GET['lang'] == 'en' ? 'en' : 'de'; $_SESSION['lang'] = $lang; }
@@ -206,30 +200,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['restore_file'])) {
     }
 }
 
-// --- SCRAPER ---
-if (isset($_GET['fetch_url'])) {
-    $url = is_safe_url($_GET['fetch_url']); if (!$url) { echo json_encode(['success'=>false]); exit; }
-    header('Content-Type: application/json');
-    $ch = curl_init($url); curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER=>true, CURLOPT_FOLLOWLOCATION=>false, CURLOPT_TIMEOUT=>5, CURLOPT_MAXFILESIZE=>500000, CURLOPT_USERAGENT=>'Mozilla/5.0']);
-    $html = curl_exec($ch); curl_close($ch);
-    $doc = new DOMDocument(); @$doc->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
-    $xpath = new DOMXPath($doc);
-    $res = ['success'=>true, 'name'=>'', 'preis'=>'', 'bild_url'=>'', 'brand'=>'', 'gewicht'=>'', 'laenge'=>''];
-    $brandNodes = $xpath->query('//meta[@property="og:product:brand"]/@content | //meta[@name="twitter:data2"]/@content');
-    if($brandNodes->length) $res['brand'] = trim($brandNodes->item(0)->nodeValue);
-    $titleNodes = $xpath->query('//meta[@property="og:title"]/@content | //h1');
-    if($titleNodes->length) {
-        $cleanTitle = trim(preg_split('/[|»\-]/', $titleNodes->item(0)->nodeValue)[0]);
-        if (!empty($res['brand'])) { $res['name'] = trim(preg_replace('/^' . preg_quote($res['brand'], '/') . '/i', '', $cleanTitle)); }
-        else { $parts = explode(' ', $cleanTitle, 2); $res['brand'] = $parts[0]; $res['name'] = $parts[1] ?? $parts[0]; }
-    }
-    $img = $xpath->query('//meta[@property="og:image"]/@content');
-    if($img->length) $res['bild_url'] = is_safe_url($img->item(0)->nodeValue) ? $img->item(0)->nodeValue : '';
-    if (preg_match('/"price":\s*"(\d+[\d,.]*)"/', $html, $m)) $res['preis'] = str_replace(',', '.', $m[1]);
-    if (preg_match('/(\d+[,.]?\d*)\s*(g|gr|gramm)/i', $html, $m)) $res['gewicht'] = str_replace(',', '.', $m[1]);
-    if (preg_match('/(\d+[,.]?\d*)\s*(cm|mm)/i', $html, $m)) { $v = (float)str_replace(',', '.', $m[1]); $res['laenge'] = (stripos($m[2], 'mm') !== false) ? $v/10 : $v; }
-    echo json_encode($res); exit;
-}
 
 // --- LOAD MORE / SUCHE ---
 if (isset($_GET['load_more'])) {
@@ -282,16 +252,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['action']) || isset($
                 if(!is_dir('uploads')) mkdir('uploads', 0755, true); 
                 move_uploaded_file($_FILES['bild']['tmp_name'], "uploads/".$bild);
             }
-        } elseif (!empty($_POST['remote_img']) && is_safe_url($_POST['remote_img'])) {
-            $ctx = stream_context_create(['http' => ['timeout' => 5]]);
-            $data = @file_get_contents($_POST['remote_img'], false, $ctx);
-            if($data && strlen($data) < 2000000) { 
-                if (!empty($_POST['current_bild'])) { $oldFile = "uploads/" . $_POST['current_bild']; if (file_exists($oldFile)) unlink($oldFile); }
-                $bild = bin2hex(random_bytes(16)).'.jpg'; 
-                if(!is_dir('uploads')) mkdir('uploads', 0755, true);
-                file_put_contents("uploads/".$bild, $data); 
-            }
-        }
+        } 
+
         $fische_raw = isset($_POST['zielfische']) ? $_POST['zielfische'] : [];
         $fische_de = [];
         foreach($fische_raw as $f_val) {
@@ -340,8 +302,7 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
         .btn-full { background: var(--accent); color: #000; font-weight: bold; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; margin-top: 10px; font-size: 0.95rem; }
         .detail-img-box { width: 100%; height: 300px; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; background: transparent; }
         .detail-img-box img { width: 100%; height: 100%; object-fit: cover; }
-        .preview-box { width: 100%; height: 140px; border-radius: 8px; margin-bottom: 10px; display: none; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--accent); background: transparent; }
-        .preview-box img { width: 100%; height: 100%; object-fit: contain; }
+
         .detail-header { text-align: center; margin: 20px 0; }
         .detail-header h1 { display: inline-block; margin: 0; font-size: 1.8rem; }
         .detail-header h2 { display: inline-block; margin: 0 0 0 10px; color: var(--label); font-size: 1.8rem; font-weight: normal; }
@@ -376,33 +337,129 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
         .full-width { grid-column: span 2; }
         
         /* STICKY CONTAINER FÜR STATS UND ADD BUTTON */
-        .stats-and-add { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 15px; 
-            position: sticky;
-            top: 5px;
-            z-index: 98;
-            background: var(--bg);
-            padding: 10px 0;
-        }
-        .stats-box { background: var(--card); padding: 12px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); flex-grow: 1; margin-right: 10px; }
-        .stats-box span { color: var(--label); font-weight: bold; font-size: 0.8rem; text-transform: uppercase; margin-right: 15px; }
-        .stats-box b { color: var(--text); font-size: 1.1rem; }
+.stats-and-add { 
+    display: grid;
+    grid-template-columns: 1fr 1fr;   /* IMMER gleich breit */
+    gap: 10px;
+
+    align-items: center;
+    margin-bottom: 15px;
+
+    position: sticky;
+    top: 5px;
+    z-index: 98;
+    background: var(--bg);
+    padding: 10px 0;
+}
+.stats-box { 
+    background: var(--card); 
+    border-radius: 12px; 
+    border: 1px solid rgba(255,255,255,0.05);
+
+    height: 42px;
+    padding: 0 12px;
+    margin: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    box-sizing: border-box;
+    white-space: nowrap;
+}
+
+.stats-box span { 
+    color: var(--label); 
+    font-weight: bold; 
+    font-size: 0.75rem; 
+    text-transform: uppercase; 
+    margin: 0;
+    line-height: 1;
+}
+
+.stats-box b { 
+    color: var(--text); 
+    font-size: 0.9rem; 
+    line-height: 1;
+}
+
         
-        .add-main-btn { 
-            background: var(--accent); 
-            color: #000; 
-            border: none; 
-            padding: 14px 24px; 
-            border-radius: 12px; 
-            font-weight: 900; 
-            font-size: 1rem; 
-            cursor: pointer; 
-            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2); 
-            white-space: nowrap;
-        }
+.add-main-btn { 
+    background: var(--accent); 
+    color: #000; 
+    border: none; 
+    border-radius: 12px; 
+
+    height: 42px;              /* niedriger */
+    padding: 0 12px;           /* GLEICH wie stats-box */
+
+    font-weight: 900; 
+    font-size: 0.9rem; 
+    cursor: pointer; 
+    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2); 
+    white-space: nowrap;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+}
+
+/* ================= MOBILE ================= */
+@media (max-width: 600px) {
+
+    body {
+        padding-top: 0;
+    }
+
+    .container {
+        margin-top: 0;
+    }
+
+    .header {
+        margin: 0;
+        padding: 0;
+        gap: 4px;
+    }
+
+    .app-title {
+        font-size: 0;
+    }
+
+    .app-title::after {
+        content: "🎣";
+        font-size: 1.3rem;
+    }
+
+    .kat-bar {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+        overflow-x: hidden;
+    }
+
+    .kat-btn {
+        height: 28px;
+        padding: 0 2px;
+        font-size: 0.62rem;
+        line-height: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-align: center;
+        border-radius: 8px;
+    }
+
+    /* iOS Zoom verhindern */
+    .top-search {
+        font-size: 16px !important;
+    }
+}
+
+
     </style>
 </head>
 <body class="<?= $theme ?>">
@@ -495,13 +552,10 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
             <input type="hidden" name="action" value="<?= $is_edit ? 'edit' : 'save' ?>">
             <input type="hidden" name="id" value="<?= $curr['id'] ?>">
             <input type="hidden" name="current_bild" value="<?= $curr['bild'] ?>">
-            <input type="hidden" name="remote_img" id="remote_img">
-
-            <div class="preview-box" id="previewBox"></div>
             
-            <?php if(!$is_edit): ?>
-            <input type="url" id="import_url" placeholder="URL zum Importieren (optional)" style="margin-bottom:10px; border-color:var(--accent);">
-            <?php endif; ?>
+
+            
+            
 
             <div class="form-grid">
                 <div>
@@ -570,7 +624,7 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
 
     <?php else: ?>
         <div class="header">
-            <h1 style="margin:0; font-size:1.6rem; letter-spacing:-1px;"> TACKLEBOX</h1>
+            <h1 class="app-title">TACKLEBOX</h1>
             <div style="display:flex; gap:8px; align-items:center; position:relative;">
                 <input type="text" id="searchInput" class="top-search" placeholder="<?= $t['search'] ?>">
                 <a href="?manage_boxes=1" class="top-btn" style="text-decoration:none;">📦 Boxen</a>
@@ -598,7 +652,8 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
         <div class="stats-and-add">
             <div class="stats-box">
                 <span><?= $t['stats_n'] ?></span><b id="totalN"><?= $stats['n']??0 ?></b>
-                <span style="margin-left:20px;"><?= $t['stats_w'] ?></span><b id="totalW"><?= number_format($stats['w']??0,2) ?></b><b> €</b>
+                <span class="stats-sep"><?= $t['stats_w'] ?></span>
+<b id="totalW"><?= number_format($stats['w']??0,2) ?></b><b> €</b>
             </div>
             <button onclick="location.href='?add=1'" class="add-main-btn">+ <?= $t['add'] ?></button>
         </div>
@@ -693,34 +748,6 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
         if(!src) return;
         document.getElementById('lbImg').src = src;
         document.getElementById('lightbox').style.display = 'flex';
-    }
-
-    // URL Scraper
-    const importInput = document.getElementById('import_url');
-    if (importInput) {
-        importInput.addEventListener('input', async (e) => {
-            const url = e.target.value;
-            if (url.length > 10) {
-                importInput.style.opacity = '0.5';
-                const res = await fetch(`?fetch_url=${encodeURIComponent(url)}`);
-                const data = await res.json();
-                if (data.success) {
-                    if (data.brand) document.getElementById('f_brand').value = data.brand;
-                    if (data.name) document.getElementById('f_name').value = data.name;
-                    if (data.preis) document.getElementById('f_price').value = data.preis;
-                    if (data.gewicht) document.getElementById('f_weight').value = data.gewicht;
-                    if (data.laenge) document.getElementById('f_length').value = data.laenge;
-                    if (data.bild_url) {
-                        const pb = document.getElementById('previewBox');
-                        pb.innerHTML = `<img src="${data.bild_url}">`;
-                        pb.style.display = 'flex';
-                        document.getElementById('remote_img').value = data.bild_url;
-                    }
-                }
-                importInput.style.opacity = '1';
-                importInput.value = '';
-            }
-        });
     }
 
     // Suche & Sortierung
