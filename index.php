@@ -968,7 +968,7 @@ $qrUrl =
             <div class="mini-card"><label><?= $t['category'] ?></label><b class="small-txt"><?= $item['kategorie'] ?></b></div>
             <div class="mini-card"><label><?= $t['color'] ?></label><b class="small-txt"><?= htmlspecialchars($item['farbe'] ?: '-') ?></b></div>
             <div class="mini-card"><label>Box</label><b class="small-txt"><?php 
-                $b_name = "Keine"; foreach($boxes as $bx) { if($bx['id'] == $item['box_id']) $b_name = $bx['name']; } echo htmlspecialchars($b_name); 
+                $b_name = $t['no_box']; foreach($boxes as $bx) { if($bx['id'] == $item['box_id']) $b_name = $bx['name']; } echo htmlspecialchars($b_name); 
             ?></b></div>
             <div class="mini-card"><label><?= $t['date'] ?></label><b class="small-txt"><?= translateFish($item['datum'], $texts, $lang) ?></b></div>
         </div>
