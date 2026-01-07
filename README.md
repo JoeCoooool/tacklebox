@@ -4,48 +4,121 @@
 
 
 
-TackleBox Pro is a lightweight, web-based inventory system for anglers. It helps manage lures, rods, reels, and accessories in a clear and structured way, providing a fast overview of your inventory, total gear value, and detailed statistics at all times.
+🎣 TackleBox Pro
+
+TackleBox Pro is a lightweight, self-hosted, web-based inventory system for anglers.
+It helps you manage lures, rods, reels, and accessories in a clean and structured way — giving you a fast overview of your gear, total value, and detailed statistics at all times.
+
+Designed for anglers who want full control over their data, without cloud services or heavy frameworks.
 
 🚀 Features
-
 📦 Visual Inventory
-Modern grid-based layout with image previews of all tackle items
+
+Modern grid-based layout with image previews
+
+Optional list view for compact browsing
+
+Mobile-friendly and responsive UI
 
 🗂 Category Management
-Automatic filtering for hardbaits, soft plastics, rods, reels, and more
+
+Categories for hardbaits, softbaits, rods, reels, hooks, accessories, and more
+
+Category filter bar with instant switching
+
+Default bait-focused start view
 
 📊 Real-Time Statistics
-Display of total item count and total value — globally and per category
 
-🔍 Smart Search
-Live search by brand, model, or target fish
+Live display of:
+
+Total item count
+
+Total inventory value (€)
+
+Statistics update dynamically per category
+
+🔍 Smart & Cross-Language Search
+
+Live search by:
+
+Brand
+
+Model
+
+Color
+
+Target fish
+
+Language-aware search
+(English search terms also match German data and vice versa)
 
 🐟 Target Fish Tracking
-Lures can be assigned to specific target fish (e.g. pike, zander, perch)
+
+Assign lures to specific target fish
+(e.g. pike, zander, perch, trout)
+
+Multi-select with visual chips
+
+Automatically translated between languages
+
+📦 Box System (Storage Management)
+
+Create, rename, and delete boxes
+
+Assign items to boxes
+
+Instant box assignment dropdown in item detail view
+
+Select a box → item is assigned immediately
+
+Select “No box” → item is removed instantly
+
+Dedicated box content view
+
+Remove items directly from boxes
+
+Automatic cleanup when a box is deleted
+
+🔳 QR Codes for Boxes
+
+Each box has its own QR code
+
+QR code links directly to the box contents in the app
+
+Optimized print layout for physical box labels
 
 🖼 Lightbox Detail View
-Images can be viewed in full-screen mode with a single click
+
+Click any image to view it full-screen
+
+Clean, distraction-free image preview
 
 💾 Data Export & Import
-Backup functionality (ZIP/SQLite) including all images
 
-📱 QR Codes
+Full backup as ZIP archive
 
-Each box has its own QR code.
-The QR code contains a direct link to the box in the app.
-______________________________________________________________________________________________________
+SQLite database
+
+All uploaded images
+
+One-click export & restore
+
+Safe restore handling
+_________________________________________________________________________________________________________****
 
 🛠 Technical Overview
+Area	Technology
+Backend	PHP (no framework)
+Database	SQLite
+Frontend	HTML, CSS, JavaScript
+Design	Responsive, Dark / Light Mode
+Security	CSRF protection, sessions, password hashing
+Performance	Lazy loading (infinite scroll)
 
-Area | Technology
-Backend | PHP, SQLite
-Frontend | HTML, CSS, JavaScript
-Design | Responsive, Dark Mode
-Security | CSRF protection, sessions, password hashing
-Performance | Lazy loading (infinite scroll)
+No external database or cloud services required — ideal for self-hosting.
 
-No external database required — ideal for self-hosting.
-______________________________________________________________________________________________________
+_________________________________________________________________________________________________________
 ⚙️ Installation (Proxmox)
 
 Open the Proxmox console
@@ -54,29 +127,27 @@ Paste the following command and press Enter:
 
 bash -c "$(curl -sL https://raw.githubusercontent.com/JoeCoooool/tacklebox/main/setup.sh | tr -d '\r')"
 
-______________________________________________________________________________________________________
 
-The setup will handle:
+The setup script will handle:
 
 Installation of all dependencies
 
-Setup of the SQLite database
+SQLite database setup
 
 Deployment of the web application
-
-______________________________________________________________________________________________________
+_________________________________________________________________________________________________________
 
 🔐 Security
 
 Protected admin area
 
-CSRF tokens for all forms
+CSRF tokens on all critical actions
 
-Secure password hashing mechanisms
+Secure password hashing
 
-Clean and reliable session handling
+Hardened session handling
 
-______________________________________________________________________________________________________
+Brute-force login protection
 
 🎯 Target Audience
 
