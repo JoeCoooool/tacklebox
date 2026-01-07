@@ -1,11 +1,11 @@
 <?php
 
 /**
- * TACKLEBOX PRO - UI Layout Update (Brand & Model side-by-side)
+ * TACKLEBOX PRO 
  */
 
 /* =========================
-   DEBUG / FEHLER (DEV)
+   DEBUG / FEHLER 
    ========================= */
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -1263,3 +1263,5 @@ document.getElementById('loader').style.display = allLoaded ? 'none' : 'block';
 </script>
 </body>
 </html>
+
+	
