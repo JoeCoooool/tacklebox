@@ -159,7 +159,6 @@ Anglers with large lure and gear inventories
 
 Self-hosting enthusiasts
 📸 Screenshots
-![TackleBox Main Screen](./screenshots/Screenshot2.png)
 ![TackleBox Main Screen](./screenshots/Screenshot3.png)
 ![TackleBox Main Screen](./screenshots/Screenshot4.png)
 ![TackleBox Main Screen](./screenshots/Screenshot6.png)
