@@ -1,6 +1,6 @@
 <?php
 /**
- * TACKLEBOX PRO 
+ * TACKLEBOX PRO !
  */
 
 // Fehlerberichterstattung
