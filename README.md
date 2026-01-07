@@ -164,3 +164,4 @@ Self-hosting enthusiasts
 ![TackleBox Main Screen](./screenshots/Screenshot4.png)
 ![TackleBox Main Screen](./screenshots/Screenshot6.png)
 ![TackleBox Main Screen](./screenshots/Screenshot7.png)
+![TackleBox Main Screen](./screenshots/Screenshot8.png)
