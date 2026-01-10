@@ -1,4 +1,3 @@
-
 <?php
 
 /**
@@ -258,8 +257,9 @@ $texts = [
          'box_contents' => 'Inhalt dieser Box',
 		 'box_select' => 'Box auswählen',
 'close'      => 'Schließen',
-'boxes' => 'Boxen',
-
+    'boxes' => 'Boxen',
+    'select_box' => 'Box auswählen',
+    'print' => 'Drucken',
 
 
 
@@ -308,14 +308,15 @@ $texts = [
     'view_list' => 'List View',      
     'box_contents' => 'Contents of this box',
 	'box_select' => 'Select box',
-'close'      => 'Close',
-
+    'close'      => 'Close',
+    'select_box' => 'Select box',
+    'print' => 'Print',
     'cats' => ["Hardbaits", "Softbaits", "Metal Baits", "Rods", "Reels", "Hooks", "Accessories"],
     'fish' => ["Pike", "Zander", "Perch", "Trout", "Catfish", "Eel", "Chub", "Asp", "Carp", "Tench", "Bream", "Roach", "Sea Trout", "Cod"],
-'box' => 'Box',
-'no_box' => 'No box',
-'print_qr' => 'Print QR code',
-'boxes' => 'Boxes',
+    'box' => 'Box',
+    'no_box' => 'No box',
+    'print_qr' => 'Print QR code',
+    'boxes' => 'Boxes',
 
     // 👉 NEU
     'manage_boxes' => 'Manage Boxes',
@@ -355,6 +356,7 @@ try {
 } catch (Exception $e) { die("DB Error"); }
 
 
+
 /* =========================
    Box Actions
    ========================= */
@@ -369,8 +371,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['box_action'])) {
         $db->prepare("UPDATE tackle SET box_id = 0 WHERE box_id = ?")->execute([$_POST['box_id']]);
         $db->prepare("DELETE FROM boxes WHERE id = ?")->execute([$_POST['box_id']]);
     }
-    header("Location: index.php?manage_boxes=1");
-    exit();
+header("Location: index.php");
+exit();
+
 }
 
 /* =========================
@@ -596,7 +599,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['action']) || isset($
 
 $detail_id = $_GET['id'] ?? null; $is_edit = isset($_GET['edit']);
 $is_box_view = isset($_GET['box_id']);
-$is_box_manager = isset($_GET['manage_boxes']);
 $item = $detail_id ? ($db->query("SELECT * FROM tackle WHERE id = ".(int)$detail_id)->fetch()) : null;
 if($is_box_view) $box_item = $db->query("SELECT * FROM boxes WHERE id = ".(int)$_GET['box_id'])->fetch();
 
@@ -819,6 +821,68 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
     }
 }
 
+/* ===== MODAL (CSS ONLY) ===== */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.modal:target {
+    display: flex;
+}
+
+.modal-box {
+    background: var(--card);
+    width: 90%;
+    max-width: 360px;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    text-align: center;
+}
+
+.modal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 300px;
+    overflow: auto;
+    margin-bottom: 15px;
+}
+
+.modal-item {
+    padding: 10px;
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.modal-manage {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--label);
+    text-decoration: none;
+    margin-bottom: 12px;
+}
+
+.modal-close {
+    display: block;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    color: var(--label);
+    text-decoration: none;
+}
+
 
     </style>
 </head>
@@ -826,72 +890,42 @@ $boxes = $db->query("SELECT * FROM boxes ORDER BY name ASC")->fetchAll();
 <div id="lightbox" onclick="this.style.display='none'"><span class="close">&times;</span><img id="lbImg"></div>
 <div class="container">
     
-    <?php if ($is_box_manager): ?>
-        <div style="text-align:center;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <a href="index.php" style="color:var(--accent); text-decoration:none; font-weight:normal;"><?= $t['back'] ?></a>
-                <h2 style="margin:0;">📦 <?= $t['manage_boxes'] ?></h2><div style="width:40px;"></div>
-            </div>
-            <div style="background:var(--card); padding:15px; border-radius:12px; margin-bottom:25px; border: 2px dashed #334155;">
-                <form method="POST" style="display:flex; gap:10px;">
-                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-                    <input type="hidden" name="box_action" value="new">
-                    <input type="text" name="box_name" placeholder="<?= $t['new_box_name'] ?>" required>
 
-                    <button type="submit"
-    style="background:var(--accent); border:none; padding:10px 15px;
-           border-radius:8px; font-weight:normal; cursor:pointer; color:#000;">
-    <?= $t['create'] ?>
-</button>
 
-                </form>
-            </div>
-            <?php foreach($boxes as $b): ?>
-                <div style="background:var(--card); padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid rgba(255,255,255,0.05); text-align:left;">
-                    <form method="POST" style="display:flex; gap:10px; align-items:center;">
-                        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-                        <input type="hidden" name="box_id" value="<?= $b['id'] ?>">
-                        <input type="hidden" name="box_action" value="update">
-                        <input type="text" name="box_name" value="<?= htmlspecialchars($b['name']) ?>" style="flex:1;">
-                        <button type="submit" style="background:var(--accent); border:none; padding:8px 12px; border-radius:6px; font-weight:normal; cursor:pointer;">OK</button>
-                    </form>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-<a href="?box_id=<?= $b['id'] ?>&lang=<?= $lang ?>"
-   style="color:var(--label); font-size:0.8rem; text-decoration:none;">
-    <?= $t['qr_content'] ?>
-</a>
-<form method="POST"
-      onsubmit="return confirm('<?= $t['confirm'] ?>')"
-      style="margin:0;">
-    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-    <input type="hidden" name="box_id" value="<?= $b['id'] ?>">
-    <input type="hidden" name="box_action" value="delete">
+<?php if ($is_box_view && $box_item): ?>
 
-    <button type="submit"
-        style="background:none;
-               border:none;
-               color:#f87171;
-               font-size:0.8rem;
-               cursor:pointer;
-               text-decoration:underline;">
-        <?= $t['delete_box'] ?>
-    </button>
-</form>
+
+<!-- 🏠 HOME (links oben) -->
+<div style="
+    position:sticky;
+    top:0;
+    z-index:100;
+    background:var(--bg);
+    padding:6px 0;
+">
+    <a href="index.php"
+       style="
+           display:inline-flex;
+           align-items:center;
+           gap:6px;
+           padding:6px 12px;
+           border-radius:999px;
+           background:var(--card);
+           border:1px solid #334155;
+           color:var(--text);
+           font-size:0.8rem;
+           font-weight:600;
+           text-decoration:none;
+       ">
+        🏠 Home
+    </a>
+</div>
 
 
 
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
 
-   <?php elseif ($is_box_view && $box_item): ?>
 <div style="text-align:center;">
 
-    <a href="?manage_boxes=1"
-       style="display:block; margin-bottom:20px; color:var(--accent); text-decoration:none;">
-        <?= $t['back'] ?>
-    </a>
 
     <h2>📦 <?= htmlspecialchars($box_item['name']) ?></h2>
 
@@ -902,50 +936,6 @@ $qrUrl =
     . $_SERVER['PHP_SELF']
     . '?box_id=' . $box_item['id'];
 ?>
-
-    <!-- ✅ QR-BLOCK (NUR QR!) -->
-    <div class="print-label" style="
-        background:#fff;
-        border-radius:12px;
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        gap:6px;
-        margin-bottom:20px;
-    ">
-        <div style="font-size:1.2rem;font-weight:700;color:#0f172a;">
-            <?= htmlspecialchars($box_item['name']) ?>
-        </div>
-
-        <img
-            src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=<?= urlencode($qrUrl) ?>"
-            alt="QR"
-        >
-
-        <div style="font-weight:500;letter-spacing:2px;color:#0f172a;">
-            Tacklebox
-        </div>
-    </div>
-
-    <!-- ✅ DRUCKEN BUTTON -->
-<button
-    class="no-print"
-    onclick="window.print()"
-    style="
-        display:inline-block;
-        margin-bottom:30px;
-        padding:8px 16px;
-        border-radius:8px;
-        background:var(--accent);
-        color:#000;
-        font-weight:700;
-        cursor:pointer;
-        border:none;
-    "
->
-    🖨️ <?= $t['print_qr'] ?>
-</button>
-
 
 
     <!-- ✅ AB HIER BOX-INHALT -->
@@ -958,6 +948,64 @@ $qrUrl =
 
 </div>
 
+<!-- 🏠 HOME + 📦 QR CODE -->
+<div style="
+    margin:50px auto 20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:20px;
+">
+
+
+    <!-- 📦 QR CODE -->
+    <div class="print-label" style="
+        background:#fff;
+        border-radius:14px;
+        padding:18px;
+        width:220px;
+        text-align:center;
+    ">
+        <div style="
+            font-weight:700;
+            color:#0f172a;
+            margin-bottom:8px;
+        ">
+            <?= htmlspecialchars($box_item['name']) ?>
+        </div>
+
+        <img
+            src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<?= urlencode($qrUrl) ?>"
+            alt="QR"
+            style="display:block;margin:auto;"
+        >
+
+        <div style="
+            font-size:0.75rem;
+            color:#0f172a;
+            margin-top:8px;
+            letter-spacing:1px;
+        ">
+            Tacklebox
+        </div>
+    </div>
+
+    <!-- 🖨️ DRUCKEN -->
+    <button class="no-print"
+            onclick="window.print()"
+            style="
+                padding:6px 14px;
+                border-radius:8px;
+                background:var(--accent);
+                border:none;
+                font-size:0.8rem;
+                font-weight:600;
+                cursor:pointer;
+            ">
+        🖨️ <?= $t['print_qr'] ?>
+    </button>
+
+</div>
 
 
 
@@ -1119,12 +1167,22 @@ $qrUrl =
 
     <?php else: ?>
         <div class="header">
-            <h1 class="app-title">TACKLEBOX</h1>
+            <h1 class="app-title">
+    <a href="index.php" style="color:inherit;text-decoration:none;">
+        TACKLEBOX
+    </a>
+</h1>
+
             <div style="display:flex; gap:8px; align-items:center; position:relative;">
                 <input type="text" id="searchInput" class="top-search" placeholder="<?= $t['search'] ?>">
-<button class="top-btn" onclick="openBoxModal()">
+
+
+<button class="top-btn" type="button"
+        onclick="openBoxesModal(event)">
     📦 <?= $t['boxes'] ?>
 </button>
+
+
 
 
 
@@ -1317,88 +1375,140 @@ document.getElementById('loader').style.display = allLoaded ? 'none' : 'block';
     window.onload = () => loadItems();
     
     // Close dropdown on click outside
-    window.onclick = (e) => {
-        if (!e.target.matches('.top-btn')) {
-            const d = document.getElementById('mainMenu');
-            if (d && d.style.display === 'flex') d.style.display = 'none';
-        }
-    };
-	
-	function openBoxModal() {
-    document.getElementById('boxModal').style.display = 'flex';
+window.addEventListener('click', (e) => {
+    const menu = document.getElementById('mainMenu');
+    const boxModal = document.getElementById('boxModal');
+
+    // 🔒 Nur blockieren, wenn Modal WIRKLICH sichtbar ist
+    if (boxModal && getComputedStyle(boxModal).display === 'flex') {
+        return;
+    }
+
+    if (menu && !menu.contains(e.target) && !e.target.closest('.top-btn')) {
+        menu.style.display = 'none';
+    }
+});
+
+
+function openBoxesModal(e) {
+    e.stopPropagation();           // 🔒 verhindert globale Click-Handler
+    location.hash = 'boxModal';    // ✅ triggert :target garantiert
 }
 
-function closeBoxModal() {
-    document.getElementById('boxModal').style.display = 'none';
+function startRename(el) {
+    const id = el.dataset.id;
+    const oldName = el.dataset.name;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = oldName;
+    input.style.flex = '1';
+    input.style.padding = '6px';
+    input.style.borderRadius = '6px';
+    input.style.border = '1px solid #334155';
+    input.style.background = 'var(--bg)';
+    input.style.color = 'var(--text)';
+    input.style.fontSize = '0.8rem';
+
+    const wrapper = el.parentElement;
+    wrapper.innerHTML = '';
+    wrapper.appendChild(input);
+
+    input.focus();
+    input.select();
+
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            renameBox(id, input.value);
+        }
+        if (e.key === 'Escape') {
+            location.reload();
+        }
+    });
+
+    input.addEventListener('blur', () => location.reload());
 }
+
+function renameBox(id, name) {
+    if (!name.trim()) return;
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.innerHTML = `
+        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+        <input type="hidden" name="box_action" value="update">
+        <input type="hidden" name="box_id" value="${id}">
+        <input type="hidden" name="box_name" value="${name}">
+    `;
+    document.body.appendChild(form);
+    form.submit();
+}
+
 
 </script>
-<!-- 📦 BOX MODAL -->
-<div id="boxModal" style="
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.6);
-    z-index:9999;
-    align-items:center;
-    justify-content:center;
-" onclick="if(event.target===this) closeBoxModal()">
-
-    <div style="
-        background:var(--card);
-        width:90%;
-        max-width:360px;
-        border-radius:14px;
-        padding:20px;
-        box-shadow:0 20px 40px rgba(0,0,0,0.5);
-    ">
-        <h3 style="margin-top:0;text-align:center;">
-    📦 <?= $t['box_select'] ?>
-</h3>
 
 
-        <div style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow:auto;">
-            <?php foreach ($boxes as $bx): ?>
-                <a href="?box_id=<?= $bx['id'] ?>"
-                   style="
-                       padding:10px 14px;
-                       border-radius:10px;
-                       background:var(--bg);
-                       text-decoration:none;
-                       color:var(--text);
-                       font-weight:bold;
-                       text-align:center;
-                   ">
-                    📦 <?= htmlspecialchars($bx['name']) ?>
-                </a>
-            <?php endforeach; ?>
-        </div>
 
-        <hr style="margin:15px 0;border-color:#334155;">
+<!-- 📦 BOXEN POPUP (clean) -->
+<div id="boxModal" class="modal">
+    <div class="modal-box">
 
-        <a href="?manage_boxes=1"
-           style="display:block;text-align:center;color:var(--accent);font-weight:bold;text-decoration:none;">
-           ⚙️ <?= $t['manage_boxes'] ?>
+        <h3 style="margin-top:0;">📦 <?= $t['boxes'] ?></h3>
+
+<div class="modal-list">
+<?php foreach ($boxes as $bx): ?>
+    <div class="modal-item"
+         style="display:flex;align-items:center;gap:6px;">
+
+        <!-- 📦 Öffnen -->
+        <a href="?box_id=<?= $bx['id'] ?>"
+           style="flex:1;text-decoration:none;color:inherit;">
+            <?= htmlspecialchars($bx['name']) ?>
         </a>
 
-        <button onclick="closeBoxModal()"
-            style="
-                margin-top:15px;
-                width:100%;
-                padding:10px;
-                border-radius:10px;
-                border:none;
-                background:#334155;
-                color:#fff;
-                font-weight:bold;
-                cursor:pointer;
-            ">
-            <?= $t['close'] ?>
-        </button>
+        <!-- ✏️ Umbenennen -->
+        <span onclick="startRename(this)"
+              data-id="<?= $bx['id'] ?>"
+              data-name="<?= htmlspecialchars($bx['name'], ENT_QUOTES) ?>"
+              style="cursor:pointer;font-size:0.8rem;opacity:0.6;">
+            ✏️
+        </span>
+    </div>
+<?php endforeach; ?>
+</div>
+
+
+        <form method="POST" style="display:flex; gap:8px; margin-bottom:12px;">
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+            <input type="hidden" name="box_action" value="new">
+
+            <input type="text"
+                   name="box_name"
+                   placeholder="<?= $t['new_box_name'] ?>"
+                   required
+                   style="flex:1;">
+
+            <button type="submit"
+                    style="background:var(--accent);border:none;
+                           border-radius:8px;padding:8px 14px;
+                           font-weight:600;cursor:pointer;">
+                <?= $t['create'] ?>
+            </button>
+        </form>
+
+        <a href="#" class="modal-close"><?= $t['close'] ?></a>
+
     </div>
 </div>
 
+
+
 </body>
 </html>
+
+
+
+
+
 
 	
