@@ -1457,23 +1457,48 @@ function renameBox(id, name) {
 
 <div class="modal-list">
 <?php foreach ($boxes as $bx): ?>
-    <div class="modal-item"
-         style="display:flex;align-items:center;gap:6px;">
+<div class="modal-item"
+     style="display:flex;align-items:center;gap:6px;">
 
-        <!-- 📦 Öffnen -->
-        <a href="?box_id=<?= $bx['id'] ?>"
-           style="flex:1;text-decoration:none;color:inherit;">
-            <?= htmlspecialchars($bx['name']) ?>
-        </a>
+    <!-- 📦 Öffnen -->
+    <a href="?box_id=<?= $bx['id'] ?>"
+       style="flex:1;text-decoration:none;color:inherit;">
+        <?= htmlspecialchars($bx['name']) ?>
+    </a>
 
-        <!-- ✏️ Umbenennen -->
-        <span onclick="startRename(this)"
-              data-id="<?= $bx['id'] ?>"
-              data-name="<?= htmlspecialchars($bx['name'], ENT_QUOTES) ?>"
-              style="cursor:pointer;font-size:0.8rem;opacity:0.6;">
-            ✏️
-        </span>
-    </div>
+    <!-- ✏️ Umbenennen -->
+    <span onclick="startRename(this)"
+          data-id="<?= $bx['id'] ?>"
+          data-name="<?= htmlspecialchars($bx['name'], ENT_QUOTES) ?>"
+          style="cursor:pointer;font-size:0.8rem;opacity:0.6;">
+        ✏️
+    </span>
+
+    <!-- 🗑️ Löschen -->
+    <form method="POST"
+          onsubmit="return confirm('<?= $t['confirm'] ?>')"
+          style="margin:0;"
+          onclick="event.stopPropagation();">
+
+        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+        <input type="hidden" name="box_action" value="delete">
+        <input type="hidden" name="box_id" value="<?= $bx['id'] ?>">
+
+        <button type="submit"
+                title="<?= $t['delete_box'] ?>"
+                style="
+                    background:none;
+                    border:none;
+                    cursor:pointer;
+                    font-size:0.9rem;
+                    opacity:0.6;
+                    padding:0;
+                ">
+            🗑️
+        </button>
+    </form>
+</div>
+
 <?php endforeach; ?>
 </div>
 
